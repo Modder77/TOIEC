@@ -1,0 +1,10 @@
+{
+  "name": "atelier-toeic",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Entraîneur TOEIC PWA augmenté par l'IA (Claude).",
+  "engines": {
+    "node": ">=18.x"
+  }
+}

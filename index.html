@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Atelier TOEIC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4ede0">
+<title>Atelier TOEIC</title>
+
+<!-- Icônes (vrais fichiers PNG, meilleur support iOS/Android) -->
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+<!-- Manifest (vrai fichier, portée correcte pour l'installation PWA) -->
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #f4ede0;
+  --bg-card: #faf6ec;
+  --bg-elev: #ffffff;
+  --ink: #1c1814;
+  --ink-soft: #5c5247;
+  --ink-mute: #9a8f80;
+  --line: #d9cdb8;
+  --line-soft: #e8dfcc;
+  --accent: #7a2e2e;
+  --accent-soft: #b8514a;
+  --accent-bg: #f0e1de;
+  --gold: #a47e2a;
+  --green: #4d6b3e;
+  --green-bg: #e2ead9;
+  --red: #a8362f;
+  --red-bg: #f1dcd9;
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+body {
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(122,46,46,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(164,126,42,0.05) 0%, transparent 50%);
+  min-height: 100vh;
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+}
+.display { font-family: 'Fraunces', 'Source Serif Pro', Georgia, serif; letter-spacing: -0.01em; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.container { max-width: 1180px; margin: 0 auto; padding: 24px 18px 80px; }
+
+/* HEADER */
+.hdr { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+.hdr-sub { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); font-weight: 500; }
+.hdr-logo { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
+.hdr-logo em { font-style: italic; color: var(--accent); font-weight: 400; }
+.hdr-tag { font-size: 12px; color: var(--ink-soft); margin-top: 6px; font-style: italic; }
+.hdr-meta { font-size: 11px; color: var(--ink-soft); text-align: right; }
+.hdr-meta .num { font-family: 'Fraunces', serif; font-size: 22px; color: var(--ink); display: block; font-weight: 500; }
+.hdr-meta .lab { text-transform: uppercase; letter-spacing: 0.15em; }
+
+/* NAV - scrollable horizontally on mobile */
+.nav {
+  display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--line);
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav button {
+  background: transparent; border: 0; padding: 12px 14px; font-family: inherit; font-size: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer;
+  border-bottom: 2px solid transparent; font-weight: 500; flex-shrink: 0; white-space: nowrap;
+}
+.nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* CARDS */
+.card { background: var(--bg-card); border: 1px solid var(--line-soft); border-radius: 4px; padding: 22px; }
+.card-row { display: grid; gap: 16px; }
+@media (min-width: 720px) {
+  .card-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .container { padding: 32px 28px 80px; }
+  .nav button { padding: 12px 18px; font-size: 13px; }
+  .hdr-logo { font-size: 38px; }
+}
+
+h2.section-title { font-family: 'Fraunces', serif; font-weight: 400; font-size: 28px; margin: 0 0 6px; letter-spacing: -0.015em; line-height: 1.1; }
+@media (min-width: 720px) { h2.section-title { font-size: 32px; } }
+h2.section-title em { font-style: italic; color: var(--accent); }
+.section-kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 18px; font-weight: 600; }
+h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 19px; margin: 0 0 12px; letter-spacing: -0.01em; }
+
+/* BUTTONS */
+.btn {
+  background: var(--ink); color: var(--bg-card); border: 0; padding: 12px 22px; font-family: inherit;
+  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px;
+  font-weight: 600; transition: all 0.18s; touch-action: manipulation;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-ghost { background: transparent; color: var(--ink-soft); padding: 8px 12px; }
+
+/* PROGRESS */
+.progress-bar { height: 6px; background: var(--line-soft); border-radius: 100px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); transition: width 0.6s ease; border-radius: 100px; }
+
+/* MODULE TILES */
+.module-grid { display: grid; gap: 14px; grid-template-columns: 1fr; margin-top: 20px; }
+@media (min-width: 540px) { .module-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 900px) { .module-grid { grid-template-columns: 1fr 1fr 1fr; } }
+.module-tile {
+  background: var(--bg-card); border: 1px solid var(--line-soft); border-radius: 4px; padding: 22px;
+  cursor: pointer; transition: all 0.18s; display: flex; flex-direction: column; gap: 10px;
+  min-height: 150px; text-align: left; font-family: inherit; color: inherit; width: 100%;
+}
+.module-tile:active { transform: scale(0.98); border-color: var(--accent); }
+.module-tile .num { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-size: 14px; }
+.module-tile h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 21px; margin: 0; letter-spacing: -0.01em; }
+.module-tile p { font-size: 13px; color: var(--ink-soft); margin: 0; flex: 1; }
+.module-tile .meta { font-size: 11px; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* STAT CARD */
+.stat { background: var(--bg-card); border: 1px solid var(--line-soft); padding: 22px; border-radius: 4px; }
+.stat .label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); font-weight: 600; }
+.stat .value { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 400; margin: 6px 0 4px; line-height: 1; }
+.stat .value em { font-style: italic; color: var(--accent); font-weight: 400; }
+.stat .sub { font-size: 12px; color: var(--ink-soft); }
+
+/* FLASHCARD */
+.flash-stage { perspective: 1200px; min-height: 240px; }
+.flash-card {
+  position: relative; width: 100%; min-height: 240px; transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1); cursor: pointer;
+}
+.flash-card.flipped { transform: rotateY(180deg); }
+.flash-face {
+  position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; padding: 28px;
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 4px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 12px;
+}
+.flash-face.back { transform: rotateY(180deg); background: var(--accent); color: #fff; border-color: var(--accent); }
+.flash-face .word { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; }
+.flash-face .word em { font-style: italic; }
+.flash-face .trans { font-size: 20px; }
+.flash-face .ex { font-style: italic; opacity: 0.9; max-width: 480px; font-size: 14px; }
+.flash-face .hint { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6; margin-top: 10px; }
+
+/* OPTS */
+.opts { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.opt {
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 4px; padding: 13px 16px; cursor: pointer;
+  font-family: inherit; font-size: 15px; text-align: left; color: var(--ink); display: flex; gap: 12px; align-items: flex-start;
+  width: 100%; touch-action: manipulation;
+}
+.opt:active { transform: scale(0.99); }
+.opt.selected { background: var(--accent-bg); border-color: var(--accent); }
+.opt .marker { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; min-width: 18px; }
+.opt.correct { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.opt.correct .marker { color: var(--green); }
+.opt.wrong { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.opt.wrong .marker { color: var(--red); }
+.opt.disabled { pointer-events: none; opacity: 0.7; }
+
+/* TEXTAREA */
+textarea {
+  width: 100%; min-height: 180px; background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 4px; padding: 14px; font-family: 'Source Sans 3', sans-serif; font-size: 15px; color: var(--ink);
+  resize: vertical; line-height: 1.6; -webkit-appearance: none;
+}
+textarea:focus { outline: none; border-color: var(--accent); }
+
+/* FEEDBACK */
+.feedback {
+  background: var(--bg-elev); border-left: 3px solid var(--accent); padding: 16px 18px; margin-top: 14px;
+  border-radius: 0 4px 4px 0; font-size: 14px; line-height: 1.65;
+}
+.feedback h5 { font-family: 'Fraunces', serif; font-size: 16px; margin: 0 0 8px; color: var(--accent); }
+.feedback.correct { border-color: var(--green); }
+.feedback.correct h5 { color: var(--green); }
+.feedback.wrong { border-color: var(--red); }
+.feedback.wrong h5 { color: var(--red); }
+
+/* CHIP */
+.chip {
+  display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 100px; font-size: 12px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-right: 6px; margin-bottom: 6px;
+  background: transparent; cursor: pointer; font-family: inherit; touch-action: manipulation;
+}
+.chip:active { transform: scale(0.97); }
+.chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.accent { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+
+/* TRANSCRIPT */
+.transcript { background: var(--bg-elev); border: 1px solid var(--line-soft); border-radius: 4px; padding: 18px;
+  font-family: 'Fraunces', serif; font-size: 15px; line-height: 1.75; }
+.transcript .speaker { font-weight: 600; color: var(--accent); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Source Sans 3'; margin-right: 6px; }
+.transcript p { margin: 0 0 10px; }
+
+.reading-text { background: var(--bg-elev); padding: 22px 24px; border-radius: 4px; border: 1px solid var(--line-soft);
+  font-family: 'Fraunces', serif; font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+
+.ribbon { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.stage-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.quiet-text { color: var(--ink-soft); font-size: 13px; font-style: italic; }
+
+.spin {
+  display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.mock-bar {
+  position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 10;
+  border-bottom: 1px solid var(--line); margin-bottom: 18px; display: flex;
+  justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+
+.install-banner {
+  background: var(--accent-bg); border: 1px solid var(--accent); border-radius: 4px;
+  padding: 12px 16px; margin-bottom: 18px; font-size: 13px; display: flex; gap: 12px;
+  align-items: center; justify-content: space-between;
+}
+.install-banner button { background: none; border: 0; color: var(--accent); font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+/* Settings */
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.settings-row:last-child { border-bottom: 0; }
+.danger { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// =====================================================================
+// SERVICE WORKER — enregistré depuis le vrai fichier /sw.js
+// (portée correcte à l'origine, contrairement à un Blob URL)
+// On n'enregistre pas en local (file:) où les SW ne fonctionnent pas.
+// =====================================================================
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW non enregistré :', err));
+  });
+}
+
+// =====================================================================
+// DONNÉES
+// =====================================================================
+const VOCAB_THEMES = {
+  business: { label: "Business & Office", icon: "▦", words: [
+    { en: "deadline", fr: "date limite", ex: "We need to meet the deadline by Friday." },
+    { en: "to outsource", fr: "sous-traiter", ex: "The company decided to outsource its IT services." },
+    { en: "stakeholder", fr: "partie prenante", ex: "All stakeholders must approve the merger." },
+    { en: "to streamline", fr: "rationaliser", ex: "We streamlined the production process." },
+    { en: "agenda", fr: "ordre du jour", ex: "Let's stick to the agenda for this meeting." },
+    { en: "to delegate", fr: "déléguer", ex: "Good managers know how to delegate tasks." },
+    { en: "premises", fr: "locaux", ex: "Visitors must sign in at the premises entrance." },
+    { en: "to implement", fr: "mettre en œuvre", ex: "We will implement the new policy next month." },
+    { en: "turnover", fr: "chiffre d'affaires", ex: "Annual turnover exceeded ten million dollars." },
+    { en: "to hire", fr: "embaucher", ex: "The firm plans to hire 50 new employees." },
+    { en: "layoff", fr: "licenciement économique", ex: "The layoffs affected the entire department." },
+    { en: "headquarters", fr: "siège social", ex: "Our headquarters are located in Boston." },
+    { en: "to negotiate", fr: "négocier", ex: "We need to negotiate better terms with suppliers." },
+    { en: "merger", fr: "fusion", ex: "The merger created the largest firm in the sector." },
+    { en: "to comply with", fr: "se conformer à", ex: "All staff must comply with safety regulations." },
+  ]},
+  finance: { label: "Finance & Banking", icon: "$", words: [
+    { en: "invoice", fr: "facture", ex: "Please pay the invoice within 30 days." },
+    { en: "to reimburse", fr: "rembourser", ex: "The company will reimburse your travel expenses." },
+    { en: "shareholder", fr: "actionnaire", ex: "Shareholders voted in favor of the proposal." },
+    { en: "loan", fr: "prêt", ex: "She took out a loan to start her business." },
+    { en: "to deposit", fr: "déposer (de l'argent)", ex: "I'd like to deposit this check, please." },
+    { en: "withdrawal", fr: "retrait", ex: "Daily withdrawal limits apply to this account." },
+    { en: "revenue", fr: "recettes / revenu", ex: "Revenue grew by 8% last quarter." },
+    { en: "to forecast", fr: "prévoir", ex: "Analysts forecast strong growth for next year." },
+    { en: "expenditure", fr: "dépense", ex: "We need to reduce capital expenditure." },
+    { en: "asset", fr: "actif", ex: "The building is the firm's largest asset." },
+    { en: "liability", fr: "passif / dette", ex: "The company has too many liabilities." },
+    { en: "to audit", fr: "auditer", ex: "External firms audit our accounts annually." },
+    { en: "interest rate", fr: "taux d'intérêt", ex: "Interest rates have risen sharply this year." },
+    { en: "budget", fr: "budget", ex: "The project went over budget by 15%." },
+    { en: "to settle", fr: "régler (une dette)", ex: "Please settle the bill before leaving." },
+  ]},
+  travel: { label: "Travel & Transport", icon: "✈", words: [
+    { en: "boarding pass", fr: "carte d'embarquement", ex: "Please have your boarding pass ready." },
+    { en: "to confirm", fr: "confirmer", ex: "Please confirm your reservation 24 hours in advance." },
+    { en: "luggage", fr: "bagages", ex: "Excess luggage will incur additional fees." },
+    { en: "departure", fr: "départ", ex: "The departure has been delayed by one hour." },
+    { en: "arrival", fr: "arrivée", ex: "Estimated arrival time is 6:30 PM." },
+    { en: "round trip", fr: "aller-retour", ex: "I'd like a round-trip ticket to Chicago." },
+    { en: "one-way", fr: "aller simple", ex: "A one-way fare costs $89." },
+    { en: "to book", fr: "réserver", ex: "I booked the flight online last night." },
+    { en: "itinerary", fr: "itinéraire", ex: "I'll email you the full itinerary tomorrow." },
+    { en: "layover", fr: "escale", ex: "There's a two-hour layover in Atlanta." },
+    { en: "delay", fr: "retard", ex: "We apologize for the delay, ladies and gentlemen." },
+    { en: "to board", fr: "embarquer", ex: "Passengers will begin boarding shortly." },
+    { en: "carry-on", fr: "bagage à main", ex: "Only one carry-on is allowed per passenger." },
+    { en: "fare", fr: "tarif (transport)", ex: "Train fares have increased by 5% this year." },
+    { en: "to check in", fr: "s'enregistrer", ex: "Please check in at least 90 minutes before departure." },
+  ]},
+  hr: { label: "Human Resources", icon: "◉", words: [
+    { en: "applicant", fr: "candidat", ex: "We received over 200 applicants for the position." },
+    { en: "to apply for", fr: "postuler à", ex: "She applied for the marketing manager role." },
+    { en: "résumé", fr: "CV", ex: "Please attach your résumé to the application." },
+    { en: "cover letter", fr: "lettre de motivation", ex: "His cover letter was very persuasive." },
+    { en: "to interview", fr: "passer un entretien", ex: "We'll interview candidates next Tuesday." },
+    { en: "promotion", fr: "promotion", ex: "She received a promotion after two years." },
+    { en: "raise", fr: "augmentation de salaire", ex: "He asked his manager for a raise." },
+    { en: "benefits", fr: "avantages sociaux", ex: "The company offers excellent health benefits." },
+    { en: "leave", fr: "congé", ex: "She is on maternity leave until September." },
+    { en: "to resign", fr: "démissionner", ex: "He resigned from his position last Friday." },
+    { en: "performance review", fr: "évaluation annuelle", ex: "Performance reviews take place in December." },
+    { en: "training", fr: "formation", ex: "All new hires must complete safety training." },
+    { en: "workforce", fr: "main d'œuvre", ex: "The workforce has doubled in five years." },
+    { en: "to be in charge of", fr: "être responsable de", ex: "She's in charge of the European office." },
+    { en: "shift", fr: "équipe / poste (horaire)", ex: "I work the night shift this week." },
+  ]},
+  meetings: { label: "Meetings", icon: "✎", words: [
+    { en: "to attend", fr: "assister à", ex: "Please attend the meeting at 10 AM sharp." },
+    { en: "minutes", fr: "compte rendu", ex: "Could you take the minutes today?" },
+    { en: "to postpone", fr: "reporter", ex: "The meeting has been postponed until Friday." },
+    { en: "to schedule", fr: "planifier", ex: "Let's schedule a follow-up call next week." },
+    { en: "to bring up", fr: "aborder (un sujet)", ex: "I'd like to bring up the budget issue." },
+    { en: "to address", fr: "traiter (un problème)", ex: "We need to address these concerns directly." },
+    { en: "handout", fr: "document distribué", ex: "Please refer to the handout on page 3." },
+    { en: "venue", fr: "lieu (de l'événement)", ex: "The venue holds up to 500 attendees." },
+    { en: "to follow up", fr: "faire un suivi", ex: "I'll follow up with you by email." },
+    { en: "to draft", fr: "rédiger un brouillon", ex: "Could you draft an agenda for tomorrow?" },
+    { en: "feedback", fr: "retour / commentaires", ex: "Thank you for your constructive feedback." },
+    { en: "kickoff", fr: "lancement", ex: "The kickoff meeting is at 9 AM Monday." },
+    { en: "to wrap up", fr: "conclure", ex: "Let's wrap up and reconvene tomorrow." },
+    { en: "to chair", fr: "présider", ex: "Mr. Chen will chair the committee." },
+    { en: "attendee", fr: "participant", ex: "Over 200 attendees joined the webinar." },
+  ]},
+  marketing: { label: "Marketing & Sales", icon: "◈", words: [
+    { en: "to launch", fr: "lancer", ex: "We will launch the new product in October." },
+    { en: "campaign", fr: "campagne", ex: "The ad campaign was very successful." },
+    { en: "to target", fr: "cibler", ex: "We're targeting young professionals." },
+    { en: "brand", fr: "marque", ex: "Brand awareness has increased significantly." },
+    { en: "consumer", fr: "consommateur", ex: "Consumer demand remains strong." },
+    { en: "to pitch", fr: "présenter (une idée)", ex: "She pitched the idea to the board." },
+    { en: "discount", fr: "remise", ex: "Members receive a 20% discount." },
+    { en: "to ship", fr: "expédier", ex: "Orders ship within 48 hours." },
+    { en: "warranty", fr: "garantie", ex: "The product comes with a two-year warranty." },
+    { en: "retailer", fr: "détaillant", ex: "Major retailers carry our products." },
+    { en: "supplier", fr: "fournisseur", ex: "We've changed our main supplier." },
+    { en: "quote", fr: "devis", ex: "Could you send me a quote by Friday?" },
+    { en: "competitor", fr: "concurrent", ex: "Our main competitor lowered their prices." },
+    { en: "lead", fr: "prospect", ex: "Our sales team follows up on every lead." },
+    { en: "to expand", fr: "se développer", ex: "The company is expanding into Asia." },
+  ]},
+};
+
+const GRAMMAR_BANK = [
+  { q: "The marketing department ___ a new strategy by the end of the quarter.", opts: ["will have developed", "will be developed", "develops", "is developing"], a: 0, expl: "Futur antérieur : action achevée à un moment futur précis ('by the end of...')." },
+  { q: "All applicants ___ submit their documents before 5 PM.", opts: ["must", "should to", "ought", "have"], a: 0, expl: "'Must' exprime une obligation. 'Should to' n'existe pas." },
+  { q: "Ms. Chen has been working for the company ___ 2018.", opts: ["since", "for", "from", "during"], a: 0, expl: "'Since' + date précise. 'For' + durée." },
+  { q: "The shipment will arrive ___ Monday morning.", opts: ["on", "in", "at", "by"], a: 0, expl: "'On' s'utilise avec les jours de la semaine." },
+  { q: "Please ___ the attached file for further details.", opts: ["refer to", "refer", "refers", "referring"], a: 0, expl: "'Refer to' est un verbe à particule indissociable." },
+  { q: "The CEO emphasized the importance ___ teamwork.", opts: ["of", "for", "on", "with"], a: 0, expl: "'The importance of' est une collocation fixe." },
+  { q: "Neither the manager ___ the assistant was available.", opts: ["nor", "or", "and", "not"], a: 0, expl: "'Neither ... nor' est une structure corrélative." },
+  { q: "The report ___ by tomorrow afternoon.", opts: ["will be completed", "completes", "is completing", "has completed"], a: 0, expl: "Voix passive future : le rapport sera complété (action subie)." },
+  { q: "She is ___ qualified for the position.", opts: ["highly", "high", "height", "highest"], a: 0, expl: "Adverbe 'highly' modifie l'adjectif 'qualified'." },
+  { q: "If we ___ harder, we would meet the deadline.", opts: ["worked", "work", "had worked", "will work"], a: 0, expl: "Conditionnel type 2 : if + prétérit, would + base verbale." },
+  { q: "The company ___ its 50th anniversary next year.", opts: ["will celebrate", "celebrated", "has celebrated", "is celebrated"], a: 0, expl: "Futur simple pour un événement à venir." },
+  { q: "All employees are required ___ the training session.", opts: ["to attend", "attending", "attend", "attended"], a: 0, expl: "'To be required to + base verbale'." },
+  { q: "The new product has been very ___ received.", opts: ["well", "good", "better", "best"], a: 0, expl: "Adverbe 'well' modifie le participe passé 'received'." },
+  { q: "Despite ___ tired, she finished the project.", opts: ["being", "she was", "to be", "is"], a: 0, expl: "'Despite' + nom ou gérondif (V-ing)." },
+  { q: "Each of the candidates ___ an interview.", opts: ["has", "have", "having", "had been"], a: 0, expl: "'Each' est singulier, verbe au singulier." },
+  { q: "The conference will be held ___ the Hilton hotel.", opts: ["at", "in", "on", "to"], a: 0, expl: "'At' pour un lieu précis." },
+  { q: "We need to find a solution ___ this problem quickly.", opts: ["to", "for", "of", "with"], a: 0, expl: "'A solution to' (collocation fixe)." },
+  { q: "The package ___ delivered yesterday morning.", opts: ["was", "is", "has been", "will be"], a: 0, expl: "Passif au prétérit (yesterday = passé)." },
+  { q: "Hardly ___ I arrived when the phone rang.", opts: ["had", "have", "did", "was"], a: 0, expl: "Inversion après 'hardly' en début de phrase." },
+  { q: "The director, ___ name is on the door, is in a meeting.", opts: ["whose", "who", "which", "that"], a: 0, expl: "'Whose' exprime la possession dans une relative." },
+  { q: "I look forward to ___ from you soon.", opts: ["hearing", "hear", "heard", "be hearing"], a: 0, expl: "'Look forward to' + V-ing." },
+  { q: "The product line was discontinued ___ poor sales.", opts: ["due to", "because", "since", "so"], a: 0, expl: "'Due to' + nom. 'Because' + proposition." },
+  { q: "We had no choice ___ accept the new terms.", opts: ["but to", "than", "except", "rather"], a: 0, expl: "'Have no choice but to + base verbale'." },
+  { q: "The new policy will take ___ on January 1st.", opts: ["effect", "place", "part", "advantage"], a: 0, expl: "'Take effect' = entrer en vigueur." },
+  { q: "She is not only smart ___ also hardworking.", opts: ["but", "and", "or", "yet"], a: 0, expl: "'Not only ... but also' (corrélative fixe)." },
+  { q: "The proposal needs ___ before Friday.", opts: ["to be approved", "approving", "approve", "approved"], a: 0, expl: "'Need to be + V-en' pour la voix passive." },
+  { q: "Our sales figures are higher than ___ of our competitors.", opts: ["those", "that", "these", "this"], a: 0, expl: "'Figures' est pluriel, donc 'those'." },
+  { q: "The CEO ___ the keynote speech at the conference.", opts: ["delivered", "did", "said", "spoke"], a: 0, expl: "'Deliver a speech' est la collocation correcte." },
+  { q: "___ the rain, the outdoor event was a success.", opts: ["Despite", "Although", "However", "Because of"], a: 0, expl: "'Despite' + nom. 'Although' + proposition." },
+  { q: "He is responsible ___ overseeing the project.", opts: ["for", "of", "to", "with"], a: 0, expl: "'Responsible for + V-ing'." },
+];
+
+const READING_PASSAGES = [
+  {
+    title: "Internal Memo: Office Renovation",
+    text: `To: All Marketing Department Staff
+From: David Linton, Operations Manager
+Date: March 14
+Subject: Temporary Office Relocation
+
+Please be advised that the third-floor offices will undergo significant renovation work from April 5 through April 30. During this period, all marketing staff will be temporarily relocated to the available workspaces on the fifth floor (Rooms 502 through 508).
+
+You are requested to pack all personal belongings and important documents by Friday, April 2. The IT department will move computers and phones over the weekend of April 3–4. Please label any equipment that requires careful handling.
+
+Conference Room A on the fifth floor will be reserved exclusively for department meetings during this period. Please use the online booking system to reserve it as usual.
+
+We apologize for any inconvenience this may cause. The renovated space will feature improved lighting, ergonomic furniture, and a new collaborative zone. Should you have any concerns, please contact me directly at extension 4502.`,
+    questions: [
+      { q: "When will the renovation work begin?", opts: ["April 2", "April 5", "April 3", "March 14"], a: 1 },
+      { q: "Where will the marketing staff be relocated?", opts: ["The third floor", "The fourth floor", "The fifth floor", "Another building"], a: 2 },
+      { q: "What must staff do by April 2?", opts: ["Move their computers", "Pack personal belongings", "Reserve a conference room", "Contact David Linton"], a: 1 },
+      { q: "What feature is NOT mentioned about the renovated space?", opts: ["Improved lighting", "Ergonomic furniture", "Larger windows", "Collaborative zone"], a: 2 },
+    ]
+  },
+  {
+    title: "Customer Service Email",
+    text: `Dear Ms. Patterson,
+
+Thank you for contacting Whitfield Appliances regarding the issue with your dishwasher (Model WD-450). We sincerely apologize for the inconvenience you have experienced.
+
+After reviewing your case, we would like to offer the following options:
+
+Option 1: A certified technician can visit your residence at no charge to diagnose and repair the unit. The earliest available appointment is Thursday, March 21, between 2 PM and 5 PM.
+
+Option 2: If you prefer, we can ship a replacement unit at no additional cost. The replacement would arrive within 5 to 7 business days, and our delivery team would install the new appliance and remove the defective one.
+
+Please reply to this email by March 19 to indicate your preference. If we do not hear from you by that date, we will assume you have chosen Option 1 and dispatch a technician accordingly.
+
+As a token of our appreciation for your patience, we have also credited a $50 voucher to your customer account, which you may use toward any future purchase on our website.
+
+Best regards,
+Sarah Cheng
+Customer Care Specialist
+Whitfield Appliances`,
+    questions: [
+      { q: "What is the purpose of this email?", opts: ["To advertise new appliances", "To respond to a customer complaint", "To request payment", "To announce a sale"], a: 1 },
+      { q: "How much will Ms. Patterson pay for a technician visit?", opts: ["$50", "Nothing", "It depends on the repair", "$450"], a: 1 },
+      { q: "What happens if Ms. Patterson does not reply by March 19?", opts: ["The case will be closed", "A replacement will be sent automatically", "A technician will be dispatched", "The $50 voucher will expire"], a: 2 },
+      { q: "What additional compensation is offered?", opts: ["A free extended warranty", "A $50 store voucher", "A free upgrade", "A 50% discount"], a: 1 },
+    ]
+  },
+  {
+    title: "Job Posting: Senior Account Manager",
+    text: `MERIDIAN CONSULTING — Senior Account Manager (Paris office)
+
+We are seeking an experienced Senior Account Manager to join our growing Paris team. The successful candidate will oversee a portfolio of corporate clients in the financial services sector and lead a team of three junior account executives.
+
+Responsibilities:
+• Develop and maintain long-term relationships with existing clients
+• Identify opportunities for account growth and propose tailored solutions
+• Lead quarterly business reviews and manage contract renewals
+• Mentor and develop junior team members
+• Collaborate with consulting teams to ensure seamless project delivery
+
+Requirements:
+• Minimum 7 years of experience in B2B account management, preferably in consulting or financial services
+• Fluent in French and English (additional European language a plus)
+• Proven track record of managing client portfolios exceeding €5 million in annual revenue
+• Strong leadership and interpersonal skills
+• Bachelor's degree required; MBA preferred
+
+We offer a competitive salary (€85,000–€110,000 depending on experience), performance-based bonuses, comprehensive health benefits, and 6 weeks of paid leave.
+
+Applications, including a CV and cover letter, should be submitted via our careers portal by April 30. Only shortlisted candidates will be contacted for interviews, which will take place in early May.`,
+    questions: [
+      { q: "How many people will the new manager supervise?", opts: ["Two", "Three", "Five", "Seven"], a: 1 },
+      { q: "What is required for the position?", opts: ["An MBA", "10 years of experience", "Fluency in French and English", "Experience in marketing"], a: 2 },
+      { q: "What is NOT mentioned as a benefit?", opts: ["Health insurance", "A company car", "Paid leave", "Bonuses"], a: 1 },
+      { q: "When are interviews expected to take place?", opts: ["End of April", "Early May", "Mid-April", "Late May"], a: 1 },
+    ]
+  }
+];
+
+const LISTENING_BANK = [
+  {
+    type: "conversation", title: "At the airport",
+    speakers: [
+      { voice: "female", text: "Good afternoon. May I see your passport and boarding pass, please?" },
+      { voice: "male", text: "Here you are. I'm flying to Chicago on the 4:30 flight." },
+      { voice: "female", text: "Thank you. I see you have two checked bags. That will be sixty dollars in baggage fees." },
+      { voice: "male", text: "Sixty? I thought the first bag was free with my fare class." },
+      { voice: "female", text: "Let me check... You're correct, the first bag is included. The second bag is thirty-five dollars." },
+      { voice: "male", text: "All right, I'll pay by credit card. And could I get a window seat?" },
+      { voice: "female", text: "Of course. You're now in seat 14A, which is a window. Boarding starts at gate B7 at 3:45." },
+    ],
+    questions: [
+      { q: "Where does the conversation take place?", opts: ["At a hotel reception", "At an airport check-in", "On an airplane", "At a train station"], a: 1 },
+      { q: "How much will the passenger pay in baggage fees?", opts: ["Nothing", "$35", "$60", "$95"], a: 1 },
+      { q: "What did the passenger request?", opts: ["An aisle seat", "A window seat", "An exit row", "A first-class upgrade"], a: 1 },
+      { q: "At what time does boarding begin?", opts: ["3:45", "4:30", "4:15", "3:30"], a: 0 },
+    ]
+  },
+  {
+    type: "announcement", title: "Conference announcement",
+    speakers: [
+      { voice: "female", text: "May I have your attention, please. Welcome to the Annual Marketing Innovation Conference. The opening keynote by Dr. Helen Marsh will begin at nine fifteen in the main auditorium, Hall A. Breakfast is currently being served in the foyer until nine o'clock. Please remember to wear your name badge at all times during the conference. Workshops will start at ten thirty, and you'll find the full schedule in your registration packet. The exhibition area on the second floor will open at noon. Thank you, and enjoy the conference." }
+    ],
+    questions: [
+      { q: "What time does the keynote start?", opts: ["9:00", "9:15", "10:30", "12:00"], a: 1 },
+      { q: "Where is breakfast being served?", opts: ["In the main auditorium", "In the foyer", "On the second floor", "In Hall A"], a: 1 },
+      { q: "What must attendees do throughout the conference?", opts: ["Take notes", "Wear name badges", "Sign in at every workshop", "Pay an additional fee"], a: 1 },
+      { q: "What opens at noon?", opts: ["The keynote", "Workshops", "The exhibition area", "Registration"], a: 2 },
+    ]
+  },
+  {
+    type: "conversation", title: "Office discussion",
+    speakers: [
+      { voice: "male", text: "Hi Sandra, do you have a minute? I wanted to discuss the proposal for the Henderson account." },
+      { voice: "female", text: "Sure, come in. I read your draft yesterday. Overall it's strong, but I think the pricing section needs work." },
+      { voice: "male", text: "What's wrong with it exactly?" },
+      { voice: "female", text: "We're charging twenty percent above the market average. For a new client, that's risky. I'd suggest matching the competition for the first year, then increasing in year two." },
+      { voice: "male", text: "That makes sense. Should I rewrite that section today?" },
+      { voice: "female", text: "Yes, please. We're presenting on Thursday, so I'd like to review the final version by Wednesday noon." },
+    ],
+    questions: [
+      { q: "What are they discussing?", opts: ["A new hire", "A client proposal", "A budget cut", "A vacation request"], a: 1 },
+      { q: "What problem does Sandra identify?", opts: ["The deadline is too tight", "The pricing is too high", "The writing is unclear", "The team is too small"], a: 1 },
+      { q: "When must the final version be ready?", opts: ["Wednesday noon", "Thursday morning", "Friday", "Today"], a: 0 },
+      { q: "What does Sandra suggest for year two?", opts: ["Lower prices", "Drop the client", "Increase prices", "Hire more staff"], a: 2 },
+    ]
+  },
+];
+
+const WRITING_PROMPTS = [
+  {
+    type: "email_response", title: "Respond to an email",
+    context: "You have received the following email from a colleague. Read it and respond.",
+    prompt: `From: Jennifer Walsh
+Subject: Project Delay
+
+Hi,
+I just learned that the supplier won't deliver the materials until next Friday — a full week late. This will affect our presentation to the client on Monday. Could you suggest how we should handle this? We need a plan by tomorrow.
+Thanks,
+Jennifer`,
+    instruction: "Write a response that: (1) acknowledges the problem, (2) proposes at least two concrete solutions, (3) suggests a follow-up action. Aim for 100–150 words."
+  },
+  {
+    type: "opinion_essay", title: "Opinion essay",
+    context: "Write an essay expressing your opinion on the following topic.",
+    prompt: "Do you agree or disagree with the following statement?\n\n\"Companies should require employees to come to the office at least three days per week rather than allowing fully remote work.\"\n\nGive specific reasons and examples to support your opinion.",
+    instruction: "Write approximately 250–300 words. Structure: introduction, two or three body paragraphs, conclusion."
+  },
+  {
+    type: "describe_picture", title: "Describe a scene",
+    context: "Imagine you see the following scene. Describe it in one or two complete sentences using the words provided.",
+    prompt: "A scene at an outdoor café: several customers seated at small round tables under colorful umbrellas, a waiter carrying a tray of drinks, and a musician playing guitar nearby.",
+    instruction: "Use the words: waiter / customers / outdoor. Write 1–2 complete sentences."
+  },
+];
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+function speak(text, voiceType = "female", rate = 0.95) {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) { resolve(); return; }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = "en-US";
+    utt.rate = rate;
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter(v => v.lang.startsWith("en"));
+    if (englishVoices.length > 0) {
+      if (voiceType === "female") {
+        utt.voice = englishVoices.find(v => /female|samantha|victoria|karen|moira|tessa|fiona|zira|ava|allison/i.test(v.name)) || englishVoices[0];
+      } else {
+        utt.voice = englishVoices.find(v => /male|daniel|alex|fred|tom|david|mark|aaron/i.test(v.name)) || englishVoices[englishVoices.length - 1];
+      }
+    }
+    utt.onend = () => resolve();
+    utt.onerror = () => resolve();
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+// Stockage : localStorage (fonctionne hors-ligne, sur iPhone, et persiste)
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem('toeic_progress') || '{}'); }
+  catch { return {}; }
+}
+function saveProgress(p) {
+  try { localStorage.setItem('toeic_progress', JSON.stringify(p)); } catch(e) { console.error(e); }
+}
+
+// Précharger les voix sur iOS
+function loadVoices() {
+  return new Promise(resolve => {
+    let voices = speechSynthesis.getVoices();
+    if (voices.length) { resolve(voices); return; }
+    speechSynthesis.onvoiceschanged = () => resolve(speechSynthesis.getVoices());
+    setTimeout(() => resolve(speechSynthesis.getVoices()), 1000);
+  });
+}
+
+// =====================================================================
+// IA — communication avec le backend /api/chat
+// ---------------------------------------------------------------------
+// AI_ENABLED est null tant qu'on n'a pas testé, puis true/false.
+// En local (file://) ou si le backend n'existe pas, les fonctions IA
+// basculent sur un mode dégradé (heuristique locale).
+// =====================================================================
+let AI_ENABLED = null;
+
+async function detectAI() {
+  // Pas d'API possible si on ouvre le fichier en local (protocole file:)
+  if (location.protocol === 'file:') { AI_ENABLED = false; return false; }
+  try {
+    // Health-check GET : ne consomme aucun token
+    const r = await fetch('/api/chat', { method: 'GET' });
+    if (!r.ok) { AI_ENABLED = false; return false; }
+    const data = await r.json().catch(() => ({}));
+    if (data.ok && data.hasKey) { AI_ENABLED = true; return true; }
+    if (data.ok && !data.hasKey) { AI_ENABLED = 'no-key'; return false; }
+    AI_ENABLED = false; return false;
+  } catch {
+    AI_ENABLED = false; return false;
+  }
+}
+
+// Appel principal. Renvoie le texte de la réponse, ou lève une erreur.
+async function callAI(messages, system, maxTokens = 1500, model) {
+  const r = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, system, max_tokens: maxTokens, model })
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `Erreur ${r.status}`);
+  return data.text || '';
+}
+
+// Variante qui demande du JSON strict et le parse (pour générer des exercices)
+async function callAIJson(messages, system, maxTokens = 1500) {
+  const txt = await callAI(messages, system, maxTokens);
+  // On retire d'éventuels backticks markdown
+  const clean = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // On isole le premier objet/tableau JSON
+  const start = clean.search(/[[{]/);
+  const end = Math.max(clean.lastIndexOf(']'), clean.lastIndexOf('}'));
+  const slice = start >= 0 && end > start ? clean.slice(start, end + 1) : clean;
+  return JSON.parse(slice);
+}
+
+// =====================================================================
+// ÉTAT GLOBAL
+// =====================================================================
+let state = {
+  view: 'dashboard',
+  progress: loadProgress(),
+  vocab: { theme: 'business', mode: 'flashcards', idx: 0, flipped: false, direction: 'en-fr', quizOpts: null, quizAns: null },
+  listening: { lessonIdx: 0, hasPlayed: false, isPlaying: false, answers: {}, submitted: false, showTranscript: false },
+  reading: { idx: 0, answers: {}, submitted: false, aiPassage: null, aiAnswers: {}, aiSubmitted: false, aiLoading: false, source: 'builtin' },
+  grammar: { order: shuffle([...GRAMMAR_BANK.keys()]), idx: 0, chosen: null, ok: 0, total: 0, aiQueue: [], aiLoading: false, source: 'builtin' },
+  writing: { idx: 0, text: '', feedback: null, aiFeedback: null, loading: false },
+  mock: { started: false, finished: false, answers: {}, timeLeft: 20*60, tab: 'grammar', test: null, timerId: null },
+  tutor: { messages: [], input: '', loading: false },
+  speaking: { promptIdx: 0, transcript: '', recording: false, feedback: null, loading: false, supported: null, played: false },
+  advice: { text: null, loading: false },
+};
+
+function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+function updateProgress(updater) {
+  state.progress = updater(state.progress);
+  saveProgress(state.progress);
+}
+
+// =====================================================================
+// RENDU
+// =====================================================================
+const $ = (sel) => document.querySelector(sel);
+const root = document.getElementById('app');
+
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') el.className = attrs[k];
+    else if (k === 'style') el.style.cssText = attrs[k];
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else if (attrs[k] === true) el.setAttribute(k, '');
+    else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k]);
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    el.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function render() {
+  root.innerHTML = '';
+  const container = h('div', { class: 'container' });
+  container.appendChild(renderHeader());
+  // Banner install (uniquement si iOS Safari et pas en mode standalone)
+  if (shouldShowInstallBanner()) container.appendChild(renderInstallBanner());
+  container.appendChild(renderNav());
+  container.appendChild(renderView());
+  root.appendChild(container);
+}
+
+function shouldShowInstallBanner() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const dismissed = localStorage.getItem('toeic_install_dismissed');
+  return isIOS && !isStandalone && !dismissed;
+}
+
+function renderInstallBanner() {
+  return h('div', { class: 'install-banner' },
+    h('div', {},
+      h('strong', {}, 'Installer sur ton iPhone : '),
+      'appuie sur ',
+      h('span', { style: 'font-family:monospace' }, '⬆'),
+      ' puis "Sur l\'écran d\'accueil".'
+    ),
+    h('button', {
+      onclick: () => { localStorage.setItem('toeic_install_dismissed', '1'); render(); },
+      'aria-label': 'Fermer'
+    }, '×')
+  );
+}
+
+function renderHeader() {
+  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const p = state.progress;
+  const total = (p.vocab?.studied || 0) + (p.grammar?.attempted || 0) + (p.reading?.attempted || 0) + (p.listening?.attempted || 0);
+
+  return h('div', { class: 'hdr' },
+    h('div', {},
+      h('div', { class: 'hdr-sub' }, 'Le compagnon'),
+      h('div', { class: 'hdr-logo' }, 'Atelier ', h('em', {}, 'TOEIC')),
+      h('div', { class: 'hdr-tag' }, 'Listening · Reading · Vocabulary · Writing')
+    ),
+    h('div', { class: 'hdr-meta' },
+      h('div', { class: 'lab' }, 'Aujourd\'hui'),
+      h('div', { style: 'font-family:Fraunces;font-style:italic;font-size:15px;margin-bottom:4px' }, today),
+      h('span', { class: 'num' }, total),
+      h('div', { class: 'lab', style: 'font-size:10px;margin-top:-2px' }, 'exercices')
+    )
+  );
+}
+
+function renderNav() {
+  const items = [
+    ['dashboard', 'Accueil'],
+    ['vocabulary', 'Vocab.'],
+    ['listening', 'Listening'],
+    ['reading', 'Reading'],
+    ['grammar', 'Grammar'],
+    ['writing', 'Writing'],
+    ['speaking', 'Speaking'],
+    ['tutor', 'Tuteur IA'],
+    ['mock', 'Examen blanc'],
+    ['settings', '⚙'],
+  ];
+  return h('nav', { class: 'nav' }, items.map(([k, label]) =>
+    h('button', {
+      class: state.view === k ? 'active' : '',
+      onclick: () => { state.view = k; render(); window.scrollTo(0, 0); }
+    }, label)
+  ));
+}
+
+function renderView() {
+  switch (state.view) {
+    case 'dashboard': return renderDashboard();
+    case 'vocabulary': return renderVocabulary();
+    case 'listening': return renderListening();
+    case 'reading': return renderReading();
+    case 'grammar': return renderGrammar();
+    case 'writing': return renderWriting();
+    case 'speaking': return renderSpeaking();
+    case 'tutor': return renderTutor();
+    case 'mock': return renderMock();
+    case 'settings': return renderSettings();
+  }
+}
+
+// --- DASHBOARD ---
+function renderDashboard() {
+  const p = state.progress;
+  const vocabStudied = p.vocab?.studied || 0;
+  const totalVocab = Object.values(VOCAB_THEMES).reduce((s, t) => s + t.words.length, 0);
+  const grammarRight = p.grammar?.correct || 0;
+  const grammarTotal = p.grammar?.attempted || 0;
+  const grammarRate = grammarTotal > 0 ? Math.round((grammarRight / grammarTotal) * 100) : 0;
+  const readingRate = p.reading?.attempted > 0 ? Math.round((p.reading.correct / p.reading.attempted) * 100) : 0;
+  const listeningRate = p.listening?.attempted > 0 ? Math.round((p.listening.correct / p.listening.attempted) * 100) : 0;
+  const comprehRate = Math.round((readingRate + listeningRate) / 2) || 0;
+
+  const modules = [
+    { k: 'vocabulary', n: 'I', t: 'Vocabulaire', d: 'Cartes mémoire et quiz par thèmes.', m: `${vocabStudied} / ${totalVocab} mots` },
+    { k: 'listening', n: 'II', t: 'Listening', d: 'Conversations et annonces audio avec questions.', m: p.listening?.attempted ? `${listeningRate}% bonnes réponses` : 'Aucune session' },
+    { k: 'reading', n: 'III', t: 'Reading', d: 'Textes professionnels + textes générés par IA.', m: p.reading?.attempted ? `${readingRate}% bonnes réponses` : 'Aucune session' },
+    { k: 'grammar', n: 'IV', t: 'Grammar', d: 'Questions Part 5 + questions générées par IA.', m: p.grammar?.attempted ? `${grammarRate}% bonnes réponses` : 'Aucune session' },
+    { k: 'writing', n: 'V', t: 'Writing', d: 'Rédaction avec correction IA détaillée.', m: p.writing?.submitted ? `${p.writing.submitted} rédactions` : 'Aucune rédaction' },
+    { k: 'speaking', n: 'VI', t: 'Speaking', d: 'Expression orale, transcription + évaluation IA.', m: p.speaking?.attempted ? `${p.speaking.attempted} exercices` : 'Aucun exercice' },
+    { k: 'tutor', n: 'VII', t: 'Tuteur IA', d: 'Pose tes questions d\'anglais à un tuteur Claude.', m: 'Chat illimité' },
+    { k: 'mock', n: 'VIII', t: 'Examen blanc', d: 'Simulation chronométrée 20 min.', m: p.mock?.completed ? `Dernier : ${p.mock.lastScore}/100` : 'Jamais tenté' },
+  ];
+
+  return h('div', {},
+    h('div', { class: 'section-kicker' }, '— Vue d\'ensemble'),
+    h('h2', { class: 'section-title' }, 'Bienvenue dans ton ', h('em', {}, 'atelier d\'entraînement'), '.'),
+    h('p', { style: 'max-width:680px;color:var(--ink-soft);margin-top:14px;font-size:15px;line-height:1.65' },
+      'Préparation au TOEIC Listening & Reading et à la section Writing, augmentée par l\'IA : correction, conseils, exercices générés et tuteur.'),
+    h('div', { class: 'card-row cols-3', style: 'margin-top:24px' },
+      h('div', { class: 'stat' },
+        h('div', { class: 'label' }, 'Vocabulaire'),
+        h('div', { class: 'value' }, h('em', {}, vocabStudied), h('span', { style: 'font-size:18px;color:var(--ink-mute)' }, `/${totalVocab}`)),
+        h('div', { class: 'sub' }, `${Object.keys(VOCAB_THEMES).length} thèmes`),
+        h('div', { class: 'progress-bar', style: 'margin-top:12px' },
+          h('div', { class: 'progress-bar-fill', style: `width:${Math.min(100,(vocabStudied/totalVocab)*100)}%` })
+        )
+      ),
+      h('div', { class: 'stat' },
+        h('div', { class: 'label' }, 'Grammar'),
+        h('div', { class: 'value' }, h('em', {}, grammarRate), h('span', { style: 'font-size:22px;color:var(--ink-mute)' }, '%')),
+        h('div', { class: 'sub' }, `${grammarRight} / ${grammarTotal} questions`),
+        h('div', { class: 'progress-bar', style: 'margin-top:12px' },
+          h('div', { class: 'progress-bar-fill', style: `width:${grammarRate}%` })
+        )
+      ),
+      h('div', { class: 'stat' },
+        h('div', { class: 'label' }, 'Compréhension'),
+        h('div', { class: 'value' }, h('em', {}, comprehRate), h('span', { style: 'font-size:22px;color:var(--ink-mute)' }, '%')),
+        h('div', { class: 'sub' }, 'reading + listening'),
+        h('div', { class: 'progress-bar', style: 'margin-top:12px' },
+          h('div', { class: 'progress-bar-fill', style: `width:${comprehRate}%` })
+        )
+      )
+    ),
+    renderAdviceCard(),
+    h('div', { class: 'module-grid' }, modules.map(m =>
+      h('button', { class: 'module-tile', onclick: () => { state.view = m.k; render(); window.scrollTo(0,0); } },
+        h('span', { class: 'num' }, m.n),
+        h('h4', {}, m.t),
+        h('p', {}, m.d),
+        h('span', { class: 'meta' }, m.m)
+      )
+    ))
+  );
+}
+
+// Panneau "Conseils personnalisés" généré par l'IA selon la progression
+function renderAdviceCard() {
+  const a = state.advice;
+
+  const getAdvice = async () => {
+    a.loading = true; a.text = null; render();
+    const p = state.progress;
+    const stats = {
+      vocab_mots_etudies: p.vocab?.studied || 0,
+      grammar: `${p.grammar?.correct || 0}/${p.grammar?.attempted || 0}`,
+      reading: `${p.reading?.correct || 0}/${p.reading?.attempted || 0}`,
+      listening: `${p.listening?.correct || 0}/${p.listening?.attempted || 0}`,
+      redactions: p.writing?.submitted || 0,
+      speaking: p.speaking?.attempted || 0,
+      examens_blancs: p.mock?.completed || 0,
+      dernier_score_examen: p.mock?.lastScore ?? 'aucun',
+    };
+    const system = "Tu es un coach TOEIC expérimenté et bienveillant. À partir des statistiques de progression d'un apprenant français, tu donnes des conseils CONCIS, concrets et actionnables EN FRANÇAIS. Structure ta réponse en 3 parties courtes : 1) Un constat (2 phrases max), 2) Les 2-3 priorités à travailler maintenant (puces), 3) Une suggestion de plan pour la semaine (2-3 puces). Sois précis et motivant, sans bla-bla. N'invente pas de chiffres : base-toi uniquement sur les stats fournies.";
+    const userMsg = "Voici mes statistiques d'entraînement actuelles :\n" + JSON.stringify(stats, null, 2) + "\n\nQue me conseilles-tu ?";
+    try {
+      a.text = await callAI([{ role: 'user', content: userMsg }], system, 900);
+    } catch (e) {
+      a.text = "⚠ " + e.message;
+    }
+    a.loading = false; render();
+  };
+
+  const card = h('div', { class: 'card', style: 'margin-top:24px;border-left:3px solid var(--gold)' },
+    h('div', { style: 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px' },
+      h('h3', { style: 'margin:0' }, '✦ Conseils personnalisés'),
+      AI_ENABLED === true
+        ? h('button', { class: 'btn', onclick: getAdvice, disabled: a.loading },
+            a.loading ? h('span', {}, h('span', { class: 'spin' }), 'Analyse…') : (a.text ? 'Réactualiser' : 'Obtenir mes conseils'))
+        : h('span', { class: 'chip' }, 'IA non disponible')
+    )
+  );
+
+  if (a.text) {
+    card.appendChild(h('div', { class: 'feedback', style: 'border-color:var(--gold);margin-top:14px' },
+      h('div', { style: 'white-space:pre-wrap;line-height:1.7' }, a.text)));
+  } else if (!a.loading) {
+    card.appendChild(h('p', { class: 'quiet-text', style: 'margin-top:12px' },
+      AI_ENABLED === true
+        ? 'Clique pour obtenir une analyse de ta progression et un plan de travail sur mesure.'
+        : 'Les conseils IA nécessitent le déploiement sur Netlify avec ta clé API (voir l\'onglet ⚙).'));
+  }
+
+  return card;
+}
+
+// --- VOCABULAIRE ---
+function renderVocabulary() {
+  const v = state.vocab;
+  const words = VOCAB_THEMES[v.theme].words;
+  const cur = words[v.idx];
+
+  const setTheme = (k) => { v.theme = k; v.idx = 0; v.flipped = false; v.quizOpts = null; v.quizAns = null; render(); };
+  const next = () => { v.idx = (v.idx + 1) % words.length; v.flipped = false; v.quizOpts = null; v.quizAns = null; render(); };
+  const prev = () => { v.idx = (v.idx - 1 + words.length) % words.length; v.flipped = false; render(); };
+  const markStudied = () => {
+    updateProgress(p => { p.vocab = p.vocab || { studied: 0, correct: 0 }; p.vocab.studied++; return p; });
+    next();
+  };
+
+  const view = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module I'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Vocabulaire'), ' par thématiques'),
+    h('div', { class: 'ribbon', style: 'margin:24px 0 16px' },
+      Object.entries(VOCAB_THEMES).map(([k, t]) =>
+        h('button', { class: `chip ${v.theme === k ? 'active' : ''}`, onclick: () => setTheme(k) },
+          `${t.icon} ${t.label}`)
+      )
+    ),
+    h('div', { class: 'ribbon', style: 'margin-bottom:20px' },
+      h('button', { class: `chip ${v.mode === 'flashcards' ? 'accent' : ''}`, onclick: () => { v.mode = 'flashcards'; render(); } }, 'Cartes mémoire'),
+      h('button', { class: `chip ${v.mode === 'quiz' ? 'accent' : ''}`, onclick: () => { v.mode = 'quiz'; v.quizOpts = null; render(); } }, 'Quiz'),
+      h('span', { style: 'margin-left:12px;font-size:12px;color:var(--ink-mute)' }, `Mot ${v.idx + 1} / ${words.length}`)
+    )
+  );
+
+  if (v.mode === 'flashcards') {
+    const card = h('div', { class: `flash-card ${v.flipped ? 'flipped' : ''}`, onclick: () => { v.flipped = !v.flipped; render(); } },
+      h('div', { class: 'flash-face' },
+        h('div', { class: 'word' }, v.direction === 'en-fr' ? cur.en : cur.fr),
+        h('div', { class: 'hint' }, `Tape pour retourner · ${v.direction === 'en-fr' ? 'EN → FR' : 'FR → EN'}`)
+      ),
+      h('div', { class: 'flash-face back' },
+        h('div', { class: 'word' }, h('em', {}, v.direction === 'en-fr' ? cur.fr : cur.en)),
+        h('div', { class: 'ex' }, `« ${cur.ex} »`),
+        h('button', { class: 'btn btn-ghost', style: 'color:rgba(255,255,255,0.85);margin-top:10px', onclick: (e) => { e.stopPropagation(); speak(cur.en); } }, '♪ Écouter')
+      )
+    );
+    view.appendChild(h('div', { class: 'flash-stage' }, card));
+    view.appendChild(h('div', { class: 'stage-controls' },
+      h('button', { class: 'btn btn-outline', onclick: prev }, '← Précédent'),
+      h('button', { class: 'btn', onclick: markStudied }, 'Connu, suivant →'),
+      h('button', { class: 'btn btn-ghost', onclick: () => { v.direction = v.direction === 'en-fr' ? 'fr-en' : 'en-fr'; render(); } }, '↔ Inverser')
+    ));
+  } else {
+    // QUIZ
+    if (!v.quizOpts) {
+      const others = words.filter((_, i) => i !== v.idx).sort(() => Math.random() - 0.5).slice(0, 3);
+      v.quizOpts = [...others, cur].sort(() => Math.random() - 0.5);
+      v.quizAns = null;
+    }
+    const answer = (w) => {
+      if (v.quizAns) return;
+      v.quizAns = w;
+      const ok = w.en === cur.en;
+      updateProgress(p => {
+        p.vocab = p.vocab || { studied: 0, correct: 0 };
+        p.vocab.studied++;
+        if (ok) p.vocab.correct = (p.vocab.correct || 0) + 1;
+        return p;
+      });
+      render();
+    };
+    const card = h('div', { class: 'card' },
+      h('div', { class: 'section-kicker', style: 'margin-bottom:12px' }, 'Quelle est la traduction de…'),
+      h('div', { class: 'display', style: 'font-size:32px;margin-bottom:6px' }, h('em', {}, cur.en)),
+      h('button', { class: 'btn btn-ghost', onclick: () => speak(cur.en) }, '♪ Écouter'),
+      h('div', { class: 'opts' }, v.quizOpts.map((w, i) => {
+        let cls = 'opt';
+        if (v.quizAns) {
+          if (w.en === cur.en) cls += ' correct';
+          else if (w.en === v.quizAns.en) cls += ' wrong';
+          else cls += ' disabled';
+        }
+        return h('button', { class: cls, onclick: () => answer(w) },
+          h('span', { class: 'marker' }, String.fromCharCode(65 + i)),
+          ' ' + w.fr);
+      }))
+    );
+    if (v.quizAns) {
+      const ok = v.quizAns.en === cur.en;
+      card.appendChild(h('div', { class: `feedback ${ok ? 'correct' : 'wrong'}` },
+        h('h5', {}, ok ? '✓ Correct' : '✗ Incorrect'),
+        h('div', {}, h('strong', {}, cur.en), ' — ', h('em', {}, cur.fr)),
+        h('div', { style: 'margin-top:6px;font-style:italic;color:var(--ink-soft)' }, `« ${cur.ex} »`),
+        h('button', { class: 'btn', style: 'margin-top:12px', onclick: next }, 'Suivant →')
+      ));
+    }
+    view.appendChild(card);
+  }
+
+  return view;
+}
+
+// --- LISTENING ---
+function renderListening() {
+  const l = state.listening;
+  const lesson = LISTENING_BANK[l.lessonIdx];
+
+  const reset = (newIdx) => {
+    if (typeof newIdx === 'number') l.lessonIdx = newIdx;
+    l.hasPlayed = false; l.isPlaying = false; l.answers = {}; l.submitted = false; l.showTranscript = false;
+    window.speechSynthesis?.cancel();
+    render();
+  };
+
+  const play = async () => {
+    l.isPlaying = true; l.hasPlayed = true; render();
+    for (const s of lesson.speakers) {
+      await speak(s.text, s.voice);
+      await new Promise(r => setTimeout(r, 300));
+    }
+    l.isPlaying = false; render();
+  };
+  const stop = () => { window.speechSynthesis?.cancel(); l.isPlaying = false; render(); };
+  const submit = () => {
+    l.submitted = true;
+    const correct = lesson.questions.filter((q, i) => l.answers[i] === q.a).length;
+    updateProgress(p => {
+      p.listening = p.listening || { attempted: 0, correct: 0 };
+      p.listening.attempted += lesson.questions.length;
+      p.listening.correct += correct;
+      return p;
+    });
+    render();
+  };
+
+  const view = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module II'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Listening'), ' Comprehension'),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, 'Écoute attentivement puis réponds sans regarder la transcription.'),
+    h('div', { class: 'ribbon', style: 'margin-bottom:20px' },
+      LISTENING_BANK.map((ll, i) =>
+        h('button', { class: `chip ${l.lessonIdx === i ? 'accent' : ''}`, onclick: () => reset(i) }, `${i + 1}. ${ll.title}`))
+    )
+  );
+
+  const card = h('div', { class: 'card' },
+    h('div', { style: 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px' },
+      h('div', {}, h('span', { class: 'chip accent' }, lesson.type), h('h3', { style: 'display:inline-block;margin-left:6px' }, lesson.title)),
+      h('div', { class: 'ribbon' },
+        !l.isPlaying ? h('button', { class: 'btn', onclick: play }, `♪ ${l.hasPlayed ? 'Réécouter' : 'Lecture'}`) : h('button', { class: 'btn btn-outline', onclick: stop }, '■ Stop'),
+        h('button', { class: 'btn btn-ghost', onclick: () => { l.showTranscript = !l.showTranscript; render(); } }, l.showTranscript ? 'Masquer' : 'Transcription')
+      )
+    )
+  );
+
+  if (l.showTranscript) {
+    card.appendChild(h('div', { class: 'transcript', style: 'margin-top:14px' },
+      lesson.speakers.map(s => h('p', {}, h('span', { class: 'speaker' }, s.voice === 'female' ? 'A —' : 'B —'), s.text))
+    ));
+  }
+
+  if (l.hasPlayed) {
+    const questionsBlock = h('div', { style: 'margin-top:24px' });
+    lesson.questions.forEach((q, qi) => {
+      const qDiv = h('div', { style: 'margin-bottom:22px' },
+        h('div', { style: 'font-family:Fraunces;font-size:17px;margin-bottom:6px' },
+          h('em', { style: 'color:var(--accent);margin-right:6px' }, `${qi+1}.`), q.q)
+      );
+      const opts = h('div', { class: 'opts' });
+      q.opts.forEach((opt, oi) => {
+        let cls = 'opt';
+        if (l.submitted) {
+          if (oi === q.a) cls += ' correct';
+          else if (l.answers[qi] === oi) cls += ' wrong';
+          else cls += ' disabled';
+        } else if (l.answers[qi] === oi) cls += ' selected';
+        opts.appendChild(h('button', {
+          class: cls,
+          onclick: () => { if (!l.submitted) { l.answers[qi] = oi; render(); } }
+        }, h('span', { class: 'marker' }, String.fromCharCode(65 + oi)), ' ' + opt));
+      });
+      qDiv.appendChild(opts);
+      questionsBlock.appendChild(qDiv);
+    });
+    if (!l.submitted) {
+      questionsBlock.appendChild(h('button', {
+        class: 'btn btn-accent',
+        disabled: Object.keys(l.answers).length < lesson.questions.length,
+        onclick: submit
+      }, 'Valider mes réponses'));
+    } else {
+      const ok = lesson.questions.filter((q,i) => l.answers[i] === q.a).length;
+      questionsBlock.appendChild(h('div', { class: 'feedback correct' },
+        h('h5', {}, 'Résultat'),
+        h('div', {}, `${ok} / ${lesson.questions.length} bonnes réponses`),
+        h('div', { class: 'stage-controls' },
+          h('button', { class: 'btn btn-outline', onclick: () => reset(l.lessonIdx) }, 'Recommencer'),
+          l.lessonIdx < LISTENING_BANK.length - 1 ?
+            h('button', { class: 'btn', onclick: () => reset(l.lessonIdx + 1) }, 'Suivant →') : null
+        )
+      ));
+    }
+    card.appendChild(questionsBlock);
+  } else {
+    card.appendChild(h('p', { class: 'quiet-text', style: 'margin-top:16px' }, 'Lance la lecture pour faire apparaître les questions.'));
+  }
+
+  view.appendChild(card);
+  return view;
+}
+
+// --- READING ---
+function renderReading() {
+  const r = state.reading;
+  const usingAI = r.source === 'ai' && r.aiPassage;
+  const passage = usingAI ? r.aiPassage : READING_PASSAGES[r.idx];
+  const answers = usingAI ? r.aiAnswers : r.answers;
+  const submitted = usingAI ? r.aiSubmitted : r.submitted;
+
+  const reset = (newIdx) => {
+    if (typeof newIdx === 'number') r.idx = newIdx;
+    r.source = 'builtin'; r.answers = {}; r.submitted = false; render();
+  };
+  const resetAI = () => { r.aiAnswers = {}; r.aiSubmitted = false; render(); };
+
+  const setAnswer = (qi, oi) => {
+    if (usingAI) r.aiAnswers[qi] = oi; else r.answers[qi] = oi;
+    render();
+  };
+
+  const submit = () => {
+    const correct = passage.questions.filter((q, i) => answers[i] === q.a).length;
+    if (usingAI) r.aiSubmitted = true; else r.submitted = true;
+    updateProgress(p => {
+      p.reading = p.reading || { attempted: 0, correct: 0 };
+      p.reading.attempted += passage.questions.length;
+      p.reading.correct += correct;
+      return p;
+    });
+    render();
+  };
+
+  const generateAI = async () => {
+    r.aiLoading = true; render();
+    const topics = ['un email professionnel', 'une note de service interne', 'une offre d\'emploi', 'un article de presse économique', 'une publicité', 'un avis client', 'un planning d\'événement', 'une notice de produit'];
+    const topic = topics[Math.floor(Math.random() * topics.length)];
+    const system = "Tu génères des exercices de compréhension écrite de type TOEIC (Reading Part 7). Renvoie UNIQUEMENT un objet JSON valide, sans texte autour ni backticks. Format exact : {\"title\":\"titre court\",\"text\":\"le texte en anglais, 120-180 mots, réaliste\",\"questions\":[{\"q\":\"question en anglais\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"a\":0}]}. Produis exactement 4 questions, le champ 'a' est l'index (0-3) de la bonne réponse. Le texte doit être en anglais professionnel réaliste, et les questions doivent tester la compréhension (détails, but, inférence, vocabulaire).";
+    try {
+      const obj = await callAIJson(
+        [{ role: 'user', content: `Génère un exercice de compréhension écrite TOEIC basé sur ${topic}.` }],
+        system, 2000
+      );
+      if (obj && obj.text && Array.isArray(obj.questions)) {
+        r.aiPassage = obj; r.source = 'ai'; r.aiAnswers = {}; r.aiSubmitted = false;
+      }
+    } catch (e) {
+      alert("Génération échouée : " + e.message);
+    }
+    r.aiLoading = false; render();
+  };
+
+  const view = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module III'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Reading'), ' Comprehension'),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, 'Lis le texte, puis réponds aux questions.'),
+    h('div', { class: 'ribbon', style: 'margin-bottom:12px' },
+      READING_PASSAGES.map((p, i) => h('button', { class: `chip ${(!usingAI && r.idx === i) ? 'accent' : ''}`, onclick: () => reset(i) }, `${i + 1}. ${p.title}`)),
+      r.aiPassage ? h('button', { class: `chip ${usingAI ? 'accent' : ''}`, onclick: () => { r.source = 'ai'; render(); } }, '✦ Texte IA') : null
+    ),
+    AI_ENABLED === true
+      ? h('div', { style: 'margin-bottom:18px' },
+          h('button', { class: 'btn btn-outline', disabled: r.aiLoading, onclick: generateAI },
+            r.aiLoading ? h('span', {}, h('span', { class: 'spin' }), 'Génération du texte…') : '✦ Générer un nouveau texte'))
+      : null
+  );
+
+  const textCol = h('div', {},
+    h('h3', {}, passage.title),
+    h('div', { class: 'reading-text' }, passage.text)
+  );
+  const qCol = h('div', {}, h('h3', {}, 'Questions'));
+  passage.questions.forEach((q, qi) => {
+    const qDiv = h('div', { style: 'margin-bottom:20px' },
+      h('div', { style: 'font-family:Fraunces;font-size:16px;margin-bottom:6px' },
+        h('em', { style: 'color:var(--accent);margin-right:6px' }, `${qi+1}.`), q.q)
+    );
+    const opts = h('div', { class: 'opts' });
+    q.opts.forEach((opt, oi) => {
+      let cls = 'opt';
+      if (submitted) {
+        if (oi === q.a) cls += ' correct';
+        else if (answers[qi] === oi) cls += ' wrong';
+        else cls += ' disabled';
+      } else if (answers[qi] === oi) cls += ' selected';
+      opts.appendChild(h('button', {
+        class: cls,
+        onclick: () => { if (!submitted) setAnswer(qi, oi); }
+      }, h('span', { class: 'marker' }, String.fromCharCode(65 + oi)), ' ' + opt));
+    });
+    qDiv.appendChild(opts);
+    qCol.appendChild(qDiv);
+  });
+  if (!submitted) {
+    qCol.appendChild(h('button', {
+      class: 'btn btn-accent',
+      disabled: Object.keys(answers).length < passage.questions.length,
+      onclick: submit
+    }, 'Valider'));
+  } else {
+    const ok = passage.questions.filter((q,i) => answers[i] === q.a).length;
+    qCol.appendChild(h('div', { class: 'feedback correct' },
+      h('h5', {}, 'Résultat'),
+      h('div', {}, `${ok} / ${passage.questions.length} bonnes réponses`),
+      h('div', { class: 'stage-controls' },
+        usingAI
+          ? h('button', { class: 'btn btn-outline', onclick: resetAI }, 'Recommencer')
+          : h('button', { class: 'btn btn-outline', onclick: () => reset(r.idx) }, 'Recommencer'),
+        usingAI
+          ? (AI_ENABLED === true ? h('button', { class: 'btn', disabled: r.aiLoading, onclick: generateAI }, '✦ Nouveau texte IA') : null)
+          : (r.idx < READING_PASSAGES.length - 1 ? h('button', { class: 'btn', onclick: () => reset(r.idx + 1) }, 'Texte suivant →') : null)
+      )
+    ));
+  }
+
+  view.appendChild(h('div', { class: 'card-row cols-2', style: 'align-items:start' }, textCol, qCol));
+  return view;
+}
+
+// --- GRAMMAR ---
+function renderGrammar() {
+  const g = state.grammar;
+  // Source : banque intégrée ou questions générées par IA
+  const usingAI = g.source === 'ai' && g.aiQueue.length > 0;
+  const q = usingAI ? g.aiQueue[g.idx % g.aiQueue.length] : GRAMMAR_BANK[g.order[g.idx]];
+  const poolLen = usingAI ? g.aiQueue.length : g.order.length;
+
+  const generateAI = async () => {
+    g.aiLoading = true; render();
+    const system = "Tu génères des questions de grammaire de type TOEIC Part 5 (phrase à trou, 4 options). Renvoie UNIQUEMENT un tableau JSON valide, sans texte autour, sans backticks. Format exact : [{\"q\":\"phrase avec ___\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"a\":0,\"expl\":\"explication courte en français\"}]. Le champ 'a' est l'index (0-3) de la bonne réponse. Varie les points testés : temps, prépositions, gérondifs, comparatifs, connecteurs, voix passive, structures corrélatives. Niveau intermédiaire à avancé.";
+    try {
+      const items = await callAIJson(
+        [{ role: 'user', content: "Génère 8 nouvelles questions de grammaire TOEIC Part 5, variées et de bonne qualité." }],
+        system, 2500
+      );
+      if (Array.isArray(items) && items.length > 0) {
+        g.aiQueue = items.filter(it => it.q && Array.isArray(it.opts) && typeof it.a === 'number');
+        g.source = 'ai'; g.idx = 0; g.chosen = null;
+      }
+    } catch (e) {
+      alert("Génération échouée : " + e.message);
+    }
+    g.aiLoading = false; render();
+  };
+
+  const switchTo = (src) => { g.source = src; g.idx = 0; g.chosen = null; render(); };
+
+  const choose = (i) => {
+    if (g.chosen !== null) return;
+    g.chosen = i;
+    const ok = i === q.a;
+    g.total++; if (ok) g.ok++;
+    updateProgress(p => {
+      p.grammar = p.grammar || { attempted: 0, correct: 0 };
+      p.grammar.attempted++;
+      if (ok) p.grammar.correct++;
+      return p;
+    });
+    render();
+  };
+  const next = () => { g.chosen = null; g.idx = (g.idx + 1) % poolLen; render(); };
+
+  const card = h('div', { class: 'card' },
+    h('div', { class: 'display', style: 'font-size:21px;line-height:1.5;margin-bottom:8px' },
+      h('em', { style: 'color:var(--accent)' }, `${g.idx + 1}.`), ' ' + q.q),
+    h('div', { class: 'opts' }, q.opts.map((opt, i) => {
+      let cls = 'opt';
+      if (g.chosen !== null) {
+        if (i === q.a) cls += ' correct';
+        else if (i === g.chosen) cls += ' wrong';
+        else cls += ' disabled';
+      }
+      return h('button', { class: cls, onclick: () => choose(i) },
+        h('span', { class: 'marker' }, String.fromCharCode(65 + i)), ' ' + opt);
+    }))
+  );
+  if (g.chosen !== null) {
+    card.appendChild(h('div', { class: `feedback ${g.chosen === q.a ? 'correct' : 'wrong'}` },
+      h('h5', {}, g.chosen === q.a ? '✓ Correct' : '✗ Incorrect'),
+      h('div', {}, h('strong', {}, 'Réponse : '), `${String.fromCharCode(65 + q.a)}. ${q.opts[q.a]}`),
+      h('div', { style: 'margin-top:6px' }, q.expl || ''),
+      h('button', { class: 'btn', style: 'margin-top:12px', onclick: next }, 'Question suivante →')
+    ));
+  }
+
+  return h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module IV'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Grammar'), ' · Part 5'),
+    h('div', { class: 'ribbon', style: 'margin-bottom:14px' },
+      h('button', { class: `chip ${g.source === 'builtin' ? 'accent' : ''}`, onclick: () => switchTo('builtin') }, `Banque intégrée (${GRAMMAR_BANK.length})`),
+      g.aiQueue.length > 0 ? h('button', { class: `chip ${g.source === 'ai' ? 'accent' : ''}`, onclick: () => switchTo('ai') }, `Généré par IA (${g.aiQueue.length})`) : null,
+      AI_ENABLED === true
+        ? h('button', { class: 'chip', style: 'border-color:var(--gold);color:var(--gold)', onclick: generateAI, disabled: g.aiLoading },
+            g.aiLoading ? '⏳ Génération…' : '✦ Générer 8 questions')
+        : null
+    ),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, `Question ${g.idx + 1}/${poolLen} · Session : ${g.ok}/${g.total}${usingAI ? ' · source IA' : ''}`),
+    card
+  );
+}
+
+// --- WRITING (correction IA + repli heuristique local) ---
+function renderWriting() {
+  const w = state.writing;
+  const prompt = WRITING_PROMPTS[w.idx];
+  const wordCount = w.text.trim().split(/\s+/).filter(Boolean).length;
+
+  const reset = (newIdx) => {
+    if (typeof newIdx === 'number') w.idx = newIdx;
+    w.text = ''; w.feedback = null; w.aiFeedback = null; render();
+  };
+
+  // Correction par IA (qualitative, détaillée)
+  const aiReview = async () => {
+    w.loading = true; w.aiFeedback = null; w.feedback = null; render();
+    const system = `Tu es un examinateur TOEIC Writing expert. Évalue la réponse d'un étudiant français à une tâche d'écriture. Réponds EN FRANÇAIS, mais cite l'anglais de l'étudiant en anglais. Sois constructif, précis et encourageant. Structure EXACTEMENT ainsi (en Markdown léger) :
+
+**Note estimée : X/5**
+
+**Points forts**
+- (2-3 puces)
+
+**Points à améliorer**
+- (3-5 puces, avec exemples précis tirés du texte)
+
+**Corrections suggérées**
+- Reformule 2-3 phrases problématiques : montre la version originale puis la version corrigée.
+
+**Version améliorée (extrait)**
+- Propose une version améliorée de 2 à 4 phrases, en anglais.
+
+Adapte le niveau d'exigence au type de tâche.`;
+    const userMsg = `Type de tâche : ${prompt.type}
+Titre : ${prompt.title}
+Énoncé :
+${prompt.prompt}
+
+Consigne : ${prompt.instruction}
+
+---
+Réponse de l'étudiant (${wordCount} mots) :
+${w.text}
+---
+
+Donne ton évaluation maintenant.`;
+    try {
+      w.aiFeedback = await callAI([{ role: 'user', content: userMsg }], system, 1800);
+      updateProgress(p => { p.writing = p.writing || { submitted: 0 }; p.writing.submitted++; return p; });
+    } catch (e) {
+      w.aiFeedback = "⚠ La correction IA a échoué : " + e.message + "\n\nBascule sur l'auto-évaluation locale ci-dessous.";
+      localSelfReview();
+    }
+    w.loading = false; render();
+  };
+
+  // Auto-évaluation heuristique locale (repli hors-ligne)
+  const localSelfReview = () => {
+    const text = w.text.trim();
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const words = text.split(/\s+/).filter(Boolean);
+    const avgLen = words.length / Math.max(sentences.length, 1);
+    const longWords = words.filter(x => x.length > 7).length;
+    const lexDiv = new Set(words.map(x => x.toLowerCase())).size / Math.max(words.length, 1);
+    const checks = [];
+    const targetMin = prompt.type === 'opinion_essay' ? 230 : prompt.type === 'email_response' ? 90 : 12;
+    const targetMax = prompt.type === 'opinion_essay' ? 320 : prompt.type === 'email_response' ? 170 : 40;
+    if (words.length < targetMin) checks.push(`⚠ Texte trop court (${words.length} mots). Vise au moins ${targetMin}.`);
+    else if (words.length > targetMax) checks.push(`⚠ Texte un peu long (${words.length} mots). Cible : ${targetMin}–${targetMax}.`);
+    else checks.push(`✓ Longueur appropriée (${words.length} mots).`);
+    if (sentences.length < 3) checks.push(`⚠ Trop peu de phrases (${sentences.length}).`);
+    else checks.push(`✓ Structure en ${sentences.length} phrases.`);
+    if (avgLen < 8) checks.push('⚠ Phrases très courtes en moyenne.');
+    else if (avgLen > 28) checks.push('⚠ Phrases longues — risque de lourdeur.');
+    else checks.push(`✓ Longueur moyenne équilibrée (${avgLen.toFixed(1)} mots).`);
+    if (lexDiv < 0.45) checks.push('⚠ Variété lexicale faible.');
+    else checks.push(`✓ Bonne variété lexicale (${Math.round(lexDiv*100)}%).`);
+    const connectors = ['however','moreover','therefore','furthermore','in addition','on the other hand','firstly','secondly','finally','in conclusion','for instance','because','although'];
+    const found = connectors.filter(c => text.toLowerCase().includes(c));
+    if (found.length === 0 && prompt.type === 'opinion_essay') checks.push('⚠ Aucun connecteur logique détecté.');
+    else if (found.length > 0) checks.push(`✓ Connecteurs : ${found.slice(0,4).join(', ')}.`);
+    w.feedback = checks.join('\n');
+    updateProgress(p => { p.writing = p.writing || { submitted: 0 }; p.writing.submitted++; return p; });
+    render();
+  };
+
+  const rightCol = h('div', {},
+    h('h3', {}, 'Ta réponse'),
+    h('textarea', {
+      placeholder: 'Write your answer here in English...',
+      value: w.text,
+      oninput: (e) => { w.text = e.target.value; const wcEl = $('#wc'); if (wcEl) wcEl.textContent = `${e.target.value.trim().split(/\s+/).filter(Boolean).length} mots`; }
+    }),
+    h('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px' },
+      h('span', { id: 'wc', class: 'quiet-text' }, `${wordCount} mots`),
+      h('div', { class: 'ribbon' },
+        AI_ENABLED === true
+          ? h('button', { class: 'btn btn-accent', disabled: wordCount < 12 || w.loading, onclick: aiReview },
+              w.loading ? h('span', {}, h('span', { class: 'spin' }), 'Correction…') : '✦ Corriger avec l\'IA')
+          : null,
+        h('button', { class: 'btn btn-outline', disabled: wordCount < 12 || w.loading, onclick: localSelfReview }, 'Auto-évaluer (local)')
+      )
+    )
+  );
+
+  if (w.aiFeedback) {
+    rightCol.appendChild(h('div', { class: 'feedback', style: 'margin-top:18px' },
+      h('h5', {}, '✦ Correction IA'),
+      h('div', { style: 'white-space:pre-wrap;line-height:1.7' }, w.aiFeedback)));
+  }
+  if (w.feedback) {
+    rightCol.appendChild(h('div', { class: 'feedback', style: 'margin-top:18px' },
+      h('h5', {}, 'Évaluation automatique (locale)'),
+      h('div', { style: 'white-space:pre-wrap;line-height:1.7' }, w.feedback),
+      h('div', { class: 'quiet-text', style: 'margin-top:10px;font-size:12px' },
+        'Analyse heuristique (longueur, diversité, connecteurs). Pour une évaluation qualitative, utilise la correction IA.')));
+  }
+
+  return h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module V'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Writing'), ' · correction IA'),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px;max-width:640px' },
+      AI_ENABLED === true
+        ? 'Rédige ta réponse en anglais, puis lance la correction IA : note, points forts, axes d\'amélioration et reformulations.'
+        : 'Rédige ta réponse en anglais. La correction IA nécessite le déploiement (voir ⚙) ; en local, utilise l\'auto-évaluation.'),
+    h('div', { class: 'ribbon', style: 'margin-bottom:20px' },
+      WRITING_PROMPTS.map((p, i) => h('button', { class: `chip ${w.idx === i ? 'accent' : ''}`, onclick: () => reset(i) }, p.title))
+    ),
+    h('div', { class: 'card-row cols-2', style: 'align-items:start' },
+      h('div', {},
+        h('h3', {}, prompt.title),
+        h('p', { class: 'quiet-text' }, prompt.context),
+        h('div', { class: 'reading-text' }, prompt.prompt),
+        h('div', { class: 'feedback', style: 'border-color:var(--gold)' },
+          h('h5', { style: 'color:var(--gold)' }, 'Consigne'),
+          h('div', {}, prompt.instruction))
+      ),
+      rightCol
+    )
+  );
+}
+
+// =====================================================================
+// --- SPEAKING (reconnaissance vocale + évaluation IA) ---
+// =====================================================================
+const SPEAKING_PROMPTS = [
+  { type: 'read_aloud', title: 'Lecture à voix haute', context: 'Lis ce texte à voix haute, clairement.', prompt: "In today's competitive market, companies must constantly innovate to retain their customers. Investing in employee training and customer service often yields the highest long-term returns." },
+  { type: 'opinion', title: 'Donner son opinion', context: 'Réponds oralement à la question (30-45 secondes).', prompt: "Some people prefer to work for a large company, while others prefer a small one. Which do you prefer, and why?" },
+  { type: 'describe', title: 'Décrire une situation', context: 'Décris oralement ce que tu ferais dans cette situation.', prompt: "A colleague asks you to help with an urgent project, but you are already very busy with your own deadlines. Explain how you would respond and what you would say to them." },
+  { type: 'question', title: 'Répondre à des questions', context: 'Imagine un entretien. Réponds à voix haute.', prompt: "Tell me about your professional experience and what motivates you in your work. What are your main strengths?" },
+];
+
+function renderSpeaking() {
+  const s = state.speaking;
+  const prompt = SPEAKING_PROMPTS[s.promptIdx];
+
+  // Détection du support de reconnaissance vocale
+  if (s.supported === null) {
+    s.supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+
+  const reset = (newIdx) => {
+    if (typeof newIdx === 'number') s.promptIdx = newIdx;
+    s.transcript = ''; s.feedback = null; s.played = false;
+    if (s.recording && window._recognition) { try { window._recognition.stop(); } catch {} }
+    s.recording = false;
+    render();
+  };
+
+  const startRec = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    window._recognition = rec;
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = true;
+    let finalText = '';
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t + ' ';
+        else interim += t;
+      }
+      s.transcript = (finalText + interim).trim();
+      const el = $('#transcriptBox');
+      if (el) el.textContent = s.transcript || 'À l\'écoute…';
+    };
+    rec.onerror = (e) => { s.recording = false; render(); };
+    rec.onend = () => { s.recording = false; s.transcript = finalText.trim() || s.transcript; render(); };
+    rec.start();
+    s.recording = true; render();
+  };
+
+  const stopRec = () => {
+    if (window._recognition) { try { window._recognition.stop(); } catch {} }
+    s.recording = false; render();
+  };
+
+  const evaluate = async () => {
+    s.loading = true; s.feedback = null; render();
+    const system = `Tu es un examinateur TOEIC Speaking. On te donne la TRANSCRIPTION de la réponse orale d'un étudiant français (transcrite automatiquement, donc la ponctuation et certains mots peuvent être imparfaits — n'en tiens pas rigueur pour la prononciation que tu ne peux pas entendre). Évalue EN FRANÇAIS : pertinence par rapport à la consigne, richesse et exactitude grammaticale, vocabulaire, fluidité apparente et structure. Structure ta réponse :
+
+**Note estimée : X/5**
+
+**Ce qui fonctionne**
+- (2-3 puces)
+
+**À améliorer**
+- (3-4 puces concrètes)
+
+**Formulations plus naturelles**
+- Propose 2-3 tournures anglaises plus idiomatiques que l'étudiant pourrait réutiliser.
+
+Précise que la prononciation n'est pas évaluée (transcription uniquement).`;
+    const userMsg = `Type : ${prompt.type}\nConsigne : ${prompt.prompt}\n\n---\nTranscription de la réponse orale de l'étudiant :\n"${s.transcript}"\n---\n\nÉvalue maintenant.`;
+    try {
+      s.feedback = await callAI([{ role: 'user', content: userMsg }], system, 1400);
+      updateProgress(p => { p.speaking = p.speaking || { attempted: 0 }; p.speaking.attempted++; return p; });
+    } catch (e) {
+      s.feedback = "⚠ L'évaluation IA a échoué : " + e.message;
+    }
+    s.loading = false; render();
+  };
+
+  const view = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module VI'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Speaking'), ' · expression orale'),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px;max-width:660px' },
+      'Écoute la consigne, enregistre ta réponse à l\'oral (reconnaissance vocale du navigateur), puis fais évaluer ta transcription par l\'IA.'),
+    h('div', { class: 'ribbon', style: 'margin-bottom:20px' },
+      SPEAKING_PROMPTS.map((p, i) => h('button', { class: `chip ${s.promptIdx === i ? 'accent' : ''}`, onclick: () => reset(i) }, p.title))
+    )
+  );
+
+  if (!s.supported) {
+    view.appendChild(h('div', { class: 'card' },
+      h('h3', {}, '⚠ Reconnaissance vocale non disponible'),
+      h('p', {}, 'Ton navigateur ne supporte pas la reconnaissance vocale (Web Speech API). Sur iPhone, utilise Safari ; sur ordinateur, Chrome ou Edge fonctionnent le mieux.'),
+      h('p', { class: 'quiet-text' }, 'Tu peux quand même t\'entraîner : lis la consigne à voix haute, puis tape ta réponse dans le champ ci-dessous pour la faire évaluer.')
+    ));
+  }
+
+  const card = h('div', { class: 'card' },
+    h('span', { class: 'chip accent' }, prompt.type),
+    h('h3', { style: 'margin-top:10px' }, prompt.title),
+    h('p', { class: 'quiet-text' }, prompt.context),
+    h('div', { class: 'reading-text' }, prompt.prompt),
+    h('div', { class: 'stage-controls' },
+      h('button', { class: 'btn btn-outline', onclick: () => { speak(prompt.prompt); s.played = true; } }, '♪ Écouter la consigne'),
+      s.supported
+        ? (!s.recording
+            ? h('button', { class: 'btn btn-accent', onclick: startRec }, '● Enregistrer ma réponse')
+            : h('button', { class: 'btn', style: 'background:var(--red)', onclick: stopRec }, '■ Arrêter'))
+        : null
+    )
+  );
+
+  // Zone transcription (éditable pour permettre correction manuelle ou saisie directe)
+  card.appendChild(h('div', { style: 'margin-top:18px' },
+    h('div', { class: 'section-kicker', style: 'margin-bottom:8px' }, s.recording ? '● Enregistrement en cours…' : 'Transcription'),
+    s.recording
+      ? h('div', { id: 'transcriptBox', class: 'reading-text', style: 'min-height:80px;font-style:italic' }, s.transcript || 'À l\'écoute…')
+      : h('textarea', {
+          placeholder: 'Ta réponse transcrite apparaîtra ici. Tu peux aussi taper directement.',
+          value: s.transcript,
+          style: 'min-height:120px',
+          oninput: (e) => { s.transcript = e.target.value; }
+        })
+  ));
+
+  if (!s.recording && s.transcript.trim().split(/\s+/).filter(Boolean).length >= 5) {
+    card.appendChild(h('div', { class: 'stage-controls' },
+      AI_ENABLED === true
+        ? h('button', { class: 'btn btn-accent', disabled: s.loading, onclick: evaluate },
+            s.loading ? h('span', {}, h('span', { class: 'spin' }), 'Évaluation…') : '✦ Évaluer ma réponse')
+        : h('span', { class: 'quiet-text' }, 'L\'évaluation IA nécessite le déploiement (voir ⚙).')
+    ));
+  }
+
+  if (s.feedback) {
+    card.appendChild(h('div', { class: 'feedback', style: 'margin-top:18px' },
+      h('h5', {}, '✦ Évaluation orale'),
+      h('div', { style: 'white-space:pre-wrap;line-height:1.7' }, s.feedback)));
+  }
+
+  view.appendChild(card);
+  return view;
+}
+
+// =====================================================================
+// --- TUTEUR IA (chatbot) ---
+// =====================================================================
+function renderTutor() {
+  const t = state.tutor;
+
+  const send = async () => {
+    const msg = t.input.trim();
+    if (!msg || t.loading) return;
+    t.messages.push({ role: 'user', content: msg });
+    t.input = '';
+    t.loading = true;
+    render();
+    scrollChatBottom();
+    const system = `Tu es un tuteur d'anglais spécialisé dans la préparation au TOEIC, pour un apprenant francophone. Tu réponds de façon claire, pédagogique et concise. Tu peux : expliquer des points de grammaire, donner des exemples, corriger des phrases, expliquer du vocabulaire et des collocations, donner des astuces pour l'examen. Tu réponds en français pour les explications mais tu donnes systématiquement des exemples en anglais. Quand tu corriges une phrase, montre la version corrigée puis explique brièvement pourquoi. Reste focalisé sur l'apprentissage de l'anglais et le TOEIC.`;
+    try {
+      // On envoie l'historique complet (limité aux 12 derniers messages pour le coût)
+      const history = t.messages.slice(-12);
+      const reply = await callAI(history, system, 1200);
+      t.messages.push({ role: 'assistant', content: reply });
+    } catch (e) {
+      t.messages.push({ role: 'assistant', content: "⚠ Erreur : " + e.message });
+    }
+    t.loading = false;
+    render();
+    scrollChatBottom();
+  };
+
+  function scrollChatBottom() {
+    setTimeout(() => { const c = $('#chatScroll'); if (c) c.scrollTop = c.scrollHeight; }, 50);
+  }
+
+  const suggestions = [
+    "Quelle est la différence entre 'since' et 'for' ?",
+    "Corrige : 'I have visited London last year.'",
+    "Explique-moi les phrasal verbs avec 'get'.",
+    "Donne-moi 5 collocations avec 'make' et 'do'.",
+  ];
+
+  if (AI_ENABLED !== true) {
+    return h('div', {},
+      h('div', { class: 'section-kicker' }, '— Module VII'),
+      h('h2', { class: 'section-title' }, h('em', {}, 'Tuteur IA')),
+      h('div', { class: 'card' },
+        h('h3', {}, 'IA non disponible'),
+        h('p', {}, 'Le tuteur IA nécessite le déploiement sur Netlify avec ta clé API Anthropic. Consulte l\'onglet ⚙ pour la procédure.'))
+    );
+  }
+
+  const chatBox = h('div', { id: 'chatScroll', style: 'background:var(--bg-elev);border:1px solid var(--line);border-radius:4px;padding:18px;height:min(52vh,460px);overflow-y:auto;display:flex;flex-direction:column;gap:12px' });
+
+  if (t.messages.length === 0) {
+    chatBox.appendChild(h('div', { class: 'quiet-text', style: 'margin:auto;text-align:center;max-width:380px' },
+      h('div', { style: 'font-family:Fraunces;font-size:20px;font-style:italic;color:var(--accent);margin-bottom:8px' }, 'Bonjour !'),
+      'Pose-moi n\'importe quelle question sur l\'anglais ou le TOEIC. Grammaire, vocabulaire, correction de phrases, astuces d\'examen…'));
+  }
+
+  t.messages.forEach(m => {
+    const isUser = m.role === 'user';
+    chatBox.appendChild(h('div', {
+      style: `max-width:85%;align-self:${isUser ? 'flex-end' : 'flex-start'};background:${isUser ? 'var(--accent)' : 'var(--bg-card)'};color:${isUser ? '#fff' : 'var(--ink)'};padding:12px 16px;border-radius:${isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};border:1px solid ${isUser ? 'var(--accent)' : 'var(--line-soft)'}`
+    }, h('div', { style: 'white-space:pre-wrap;line-height:1.6;font-size:14px' }, m.content)));
+  });
+
+  if (t.loading) {
+    chatBox.appendChild(h('div', { style: 'align-self:flex-start;color:var(--ink-mute)' },
+      h('span', { class: 'spin' }), 'Le tuteur réfléchit…'));
+  }
+
+  const view = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Module VII'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Tuteur IA'), ' · pose tes questions'),
+    chatBox
+  );
+
+  // Suggestions (seulement si conversation vide)
+  if (t.messages.length === 0) {
+    view.appendChild(h('div', { class: 'ribbon', style: 'margin-top:14px' },
+      suggestions.map(sug => h('button', { class: 'chip', onclick: () => { t.input = sug; send(); } }, sug))));
+  }
+
+  // Barre de saisie
+  view.appendChild(h('div', { style: 'display:flex;gap:8px;margin-top:14px;align-items:flex-end' },
+    h('textarea', {
+      id: 'tutorInput',
+      placeholder: 'Écris ta question…',
+      value: t.input,
+      style: 'min-height:52px;flex:1',
+      oninput: (e) => { t.input = e.target.value; },
+      onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+    }),
+    h('button', { class: 'btn btn-accent', disabled: t.loading, onclick: send, style: 'height:52px' }, 'Envoyer')
+  ));
+  view.appendChild(h('p', { class: 'quiet-text', style: 'margin-top:8px;font-size:12px' },
+    t.messages.length > 0
+      ? h('button', { class: 'btn-ghost', style: 'background:none;border:0;color:var(--ink-mute);cursor:pointer;padding:0;text-decoration:underline', onclick: () => { t.messages = []; render(); } }, 'Effacer la conversation')
+      : 'Astuce : Entrée pour envoyer, Maj+Entrée pour un retour à la ligne.'));
+
+  return view;
+}
+
+// --- MOCK TEST ---
+function renderMock() {
+  const m = state.mock;
+  if (!m.test) {
+    m.test = {
+      grammar: shuffle([...GRAMMAR_BANK]).slice(0, 15),
+      reading: READING_PASSAGES[Math.floor(Math.random() * READING_PASSAGES.length)],
+      listening: LISTENING_BANK[Math.floor(Math.random() * LISTENING_BANK.length)],
+    };
+  }
+  const T = m.test;
+  const totalQ = T.grammar.length + T.reading.questions.length + T.listening.questions.length;
+
+  if (!m.started) {
+    return h('div', {},
+      h('div', { class: 'section-kicker' }, '— Module VI'),
+      h('h2', { class: 'section-title' }, h('em', {}, 'Examen blanc')),
+      h('div', { class: 'card' },
+        h('h3', {}, 'Conditions de l\'examen'),
+        h('ul', { style: 'line-height:1.9;font-size:15px' },
+          h('li', {}, h('strong', {}, '15 questions de grammaire'), ' (Part 5)'),
+          h('li', {}, h('strong', {}, '1 texte de compréhension écrite'), ' avec 4 questions'),
+          h('li', {}, h('strong', {}, '1 audio'), ' avec 4 questions (écoutable une seule fois)'),
+          h('li', {}, h('strong', {}, '20 minutes'), ' chronométrées'),
+          h('li', {}, 'Le compte à rebours ne s\'arrête pas une fois lancé.')
+        ),
+        h('button', { class: 'btn btn-accent', style: 'margin-top:16px', onclick: () => {
+          m.started = true; m.timeLeft = 20 * 60;
+          m.timerId = setInterval(() => {
+            m.timeLeft--;
+            if (m.timeLeft <= 0) { clearInterval(m.timerId); finishMock(); return; }
+            const t = $('#mockTimer'); if (t) t.textContent = mmss(m.timeLeft);
+          }, 1000);
+          render();
+        }}, 'Démarrer l\'examen blanc')
+      )
+    );
+  }
+
+  if (m.finished) {
+    let ok = 0;
+    T.grammar.forEach((q, i) => { if (m.answers['g'+i] === q.a) ok++; });
+    T.reading.questions.forEach((q, i) => { if (m.answers['r'+i] === q.a) ok++; });
+    T.listening.questions.forEach((q, i) => { if (m.answers['l'+i] === q.a) ok++; });
+    const score = Math.round((ok / totalQ) * 100);
+    const niveau = score >= 85 ? 'Excellent' : score >= 70 ? 'Bon' : score >= 55 ? 'Moyen' : 'À renforcer';
+    const usedT = 20 * 60 - m.timeLeft;
+
+    return h('div', {},
+      h('div', { class: 'section-kicker' }, '— Examen blanc terminé'),
+      h('h2', { class: 'section-title' }, 'Score : ', h('em', {}, score), '/100'),
+      h('div', { class: 'card-row cols-3', style: 'margin-top:20px' },
+        h('div', { class: 'stat' }, h('div', { class: 'label' }, 'Note'),
+          h('div', { class: 'value' }, h('em', {}, ok), `/${totalQ}`),
+          h('div', { class: 'sub' }, 'bonnes réponses')),
+        h('div', { class: 'stat' }, h('div', { class: 'label' }, 'Niveau estimé'),
+          h('div', { class: 'value', style: 'font-size:28px' }, h('em', {}, niveau)),
+          h('div', { class: 'sub' }, 'indicatif')),
+        h('div', { class: 'stat' }, h('div', { class: 'label' }, 'Temps utilisé'),
+          h('div', { class: 'value' }, mmss(usedT)),
+          h('div', { class: 'sub' }, 'sur 20:00'))
+      ),
+      h('div', { class: 'card', style: 'margin-top:20px' },
+        h('h3', {}, 'Détail par section'),
+        h('div', {}, `Grammar : ${T.grammar.filter((q,i) => m.answers['g'+i] === q.a).length} / ${T.grammar.length}`),
+        h('div', {}, `Reading : ${T.reading.questions.filter((q,i) => m.answers['r'+i] === q.a).length} / ${T.reading.questions.length}`),
+        h('div', {}, `Listening : ${T.listening.questions.filter((q,i) => m.answers['l'+i] === q.a).length} / ${T.listening.questions.length}`),
+        h('button', { class: 'btn btn-accent', style: 'margin-top:16px', onclick: () => {
+          state.mock = { started: false, finished: false, answers: {}, timeLeft: 20*60, tab: 'grammar', test: null, timerId: null };
+          render();
+        }}, 'Nouvelle session')
+      )
+    );
+  }
+
+  // En cours
+  const view = h('div', {},
+    h('div', { class: 'mock-bar' },
+      h('div', {}, h('span', { class: 'chip accent' }, 'En cours'),
+        h('span', { id: 'mockTimer', style: `margin-left:10px;font-family:Fraunces;font-size:22px;color:${m.timeLeft < 60 ? 'var(--red)' : 'var(--accent)'};font-style:italic` }, mmss(m.timeLeft))),
+      h('div', { class: 'quiet-text' }, `${Object.keys(m.answers).length} / ${totalQ}`),
+      h('button', { class: 'btn btn-outline', onclick: finishMock }, 'Terminer')
+    ),
+    h('div', { class: 'ribbon', style: 'margin-bottom:16px' },
+      h('button', { class: `chip ${m.tab === 'grammar' ? 'accent' : ''}`, onclick: () => { m.tab = 'grammar'; render(); } }, 'I · Grammar'),
+      h('button', { class: `chip ${m.tab === 'reading' ? 'accent' : ''}`, onclick: () => { m.tab = 'reading'; render(); } }, 'II · Reading'),
+      h('button', { class: `chip ${m.tab === 'listening' ? 'accent' : ''}`, onclick: () => { m.tab = 'listening'; render(); } }, 'III · Listening')
+    )
+  );
+
+  if (m.tab === 'grammar') {
+    const card = h('div', { class: 'card' });
+    T.grammar.forEach((q, i) => {
+      card.appendChild(h('div', { style: 'margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--line-soft)' },
+        h('div', { class: 'display', style: 'font-size:16px;margin-bottom:6px' },
+          h('em', { style: 'color:var(--accent)' }, `${i+1}.`), ' ' + q.q),
+        h('div', { class: 'opts' }, q.opts.map((opt, oi) =>
+          h('button', {
+            class: `opt ${m.answers['g'+i] === oi ? 'selected' : ''}`,
+            onclick: () => { m.answers['g'+i] = oi; render(); }
+          }, h('span', { class: 'marker' }, String.fromCharCode(65 + oi)), ' ' + opt)
+        ))
+      ));
+    });
+    view.appendChild(card);
+  } else if (m.tab === 'reading') {
+    const textCol = h('div', {}, h('h3', {}, T.reading.title), h('div', { class: 'reading-text' }, T.reading.text));
+    const qCol = h('div', {});
+    T.reading.questions.forEach((q, qi) => {
+      qCol.appendChild(h('div', { style: 'margin-bottom:20px' },
+        h('div', { style: 'font-family:Fraunces;font-size:16px;margin-bottom:6px' },
+          h('em', { style: 'color:var(--accent);margin-right:6px' }, `${qi+1}.`), q.q),
+        h('div', { class: 'opts' }, q.opts.map((opt, oi) =>
+          h('button', {
+            class: `opt ${m.answers['r'+qi] === oi ? 'selected' : ''}`,
+            onclick: () => { m.answers['r'+qi] = oi; render(); }
+          }, h('span', { class: 'marker' }, String.fromCharCode(65 + oi)), ' ' + opt)))
+      ));
+    });
+    view.appendChild(h('div', { class: 'card-row cols-2', style: 'align-items:start' }, textCol, qCol));
+  } else if (m.tab === 'listening') {
+    const playMock = async () => {
+      m.listeningPlayed = true; render();
+      for (const s of T.listening.speakers) {
+        await speak(s.text, s.voice);
+        await new Promise(r => setTimeout(r, 300));
+      }
+    };
+    const card = h('div', { class: 'card' }, h('h3', {}, T.listening.title));
+    if (!m.listeningPlayed) {
+      card.appendChild(h('p', { class: 'quiet-text' }, 'L\'audio ne peut être écouté qu\'une seule fois.'));
+      card.appendChild(h('button', { class: 'btn btn-accent', onclick: playMock }, '♪ Lancer l\'audio'));
+    } else {
+      card.appendChild(h('p', { class: 'quiet-text' }, 'Audio diffusé. Réponds maintenant.'));
+      T.listening.questions.forEach((q, qi) => {
+        card.appendChild(h('div', { style: 'margin-bottom:20px' },
+          h('div', { style: 'font-family:Fraunces;font-size:16px;margin-bottom:6px' },
+            h('em', { style: 'color:var(--accent);margin-right:6px' }, `${qi+1}.`), q.q),
+          h('div', { class: 'opts' }, q.opts.map((opt, oi) =>
+            h('button', {
+              class: `opt ${m.answers['l'+qi] === oi ? 'selected' : ''}`,
+              onclick: () => { m.answers['l'+qi] = oi; render(); }
+            }, h('span', { class: 'marker' }, String.fromCharCode(65 + oi)), ' ' + opt)))
+        ));
+      });
+    }
+    view.appendChild(card);
+  }
+
+  return view;
+}
+
+function finishMock() {
+  if (state.mock.timerId) clearInterval(state.mock.timerId);
+  state.mock.finished = true;
+  const m = state.mock; const T = m.test;
+  let ok = 0;
+  T.grammar.forEach((q, i) => { if (m.answers['g'+i] === q.a) ok++; });
+  T.reading.questions.forEach((q, i) => { if (m.answers['r'+i] === q.a) ok++; });
+  T.listening.questions.forEach((q, i) => { if (m.answers['l'+i] === q.a) ok++; });
+  const total = T.grammar.length + T.reading.questions.length + T.listening.questions.length;
+  const score = Math.round((ok / total) * 100);
+  updateProgress(p => {
+    p.mock = p.mock || { completed: 0 };
+    p.mock.completed++;
+    p.mock.lastScore = score;
+    return p;
+  });
+  render();
+}
+
+function mmss(sec) {
+  return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+}
+
+// --- SETTINGS ---
+function renderSettings() {
+  const p = state.progress;
+  const reset = () => {
+    if (confirm('Réinitialiser toute ta progression ? Cette action est irréversible.')) {
+      state.progress = {}; saveProgress({}); render();
+    }
+  };
+  return h('div', {},
+    h('div', { class: 'section-kicker' }, '— Paramètres'),
+    h('h2', { class: 'section-title' }, h('em', {}, 'Réglages'), ' & données'),
+    h('div', { class: 'card', style: 'margin-top:18px' },
+      h('h3', {}, 'Progression'),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Mots de vocabulaire étudiés'),
+          h('div', { class: 'quiet-text' }, `${p.vocab?.studied || 0} mots`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Questions de grammaire'),
+          h('div', { class: 'quiet-text' }, `${p.grammar?.correct || 0} / ${p.grammar?.attempted || 0}`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Questions de reading'),
+          h('div', { class: 'quiet-text' }, `${p.reading?.correct || 0} / ${p.reading?.attempted || 0}`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Questions de listening'),
+          h('div', { class: 'quiet-text' }, `${p.listening?.correct || 0} / ${p.listening?.attempted || 0}`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Rédactions'),
+          h('div', { class: 'quiet-text' }, `${p.writing?.submitted || 0} soumises`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Exercices de speaking'),
+          h('div', { class: 'quiet-text' }, `${p.speaking?.attempted || 0} réalisés`)),
+      ),
+      h('div', { class: 'settings-row' },
+        h('div', {}, h('div', {}, 'Examens blancs'),
+          h('div', { class: 'quiet-text' }, p.mock?.completed ? `${p.mock.completed} (dernier : ${p.mock.lastScore}/100)` : 'aucun')),
+      )
+    ),
+    renderAIStatusCard(),
+    h('div', { class: 'card', style: 'margin-top:18px' },
+      h('h3', {}, 'À propos'),
+      h('p', {}, 'Atelier TOEIC est une PWA hors-ligne. Ta progression est stockée localement sur ton appareil ', h('span', { class: 'mono' }, '(localStorage)'), ' et ne quitte jamais ton téléphone. Les fonctions IA, elles, transitent par ton backend Netlify vers l\'API Anthropic.'),
+      h('p', { class: 'quiet-text' }, 'Pour installer : ouvre cette page dans Safari → bouton Partager (⬆) → "Sur l\'écran d\'accueil".'),
+      h('div', { class: 'settings-row', style: 'margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);border-bottom:0' },
+        h('button', { class: 'btn btn-outline danger', onclick: reset, style: 'border-color:var(--red);color:var(--red)' }, 'Réinitialiser ma progression')
+      )
+    )
+  );
+}
+
+// Carte de statut IA + instructions de déploiement
+function renderAIStatusCard() {
+  let badge, msg, color;
+  if (AI_ENABLED === true) {
+    badge = '✓ IA active'; color = 'var(--green)';
+    msg = 'Les fonctions IA sont opérationnelles : correction Writing, évaluation Speaking, conseils, génération d\'exercices et tuteur.';
+  } else if (AI_ENABLED === 'no-key') {
+    badge = '⚠ Clé manquante'; color = 'var(--gold)';
+    msg = 'Le backend est déployé mais la variable ANTHROPIC_API_KEY n\'est pas configurée. Ajoute-la dans Netlify → Site configuration → Environment variables, puis redéploie.';
+  } else {
+    badge = '○ IA hors-ligne'; color = 'var(--ink-mute)';
+    msg = 'Tu utilises l\'app en local ou sans backend. Les fonctions IA sont désactivées ; le reste fonctionne normalement. Déploie sur Netlify pour activer l\'IA.';
+  }
+
+  return h('div', { class: 'card', style: `margin-top:18px;border-left:3px solid ${color}` },
+    h('div', { style: 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px' },
+      h('h3', { style: 'margin:0' }, 'Statut de l\'IA'),
+      h('span', { class: 'chip', style: `border-color:${color};color:${color}` }, badge)
+    ),
+    h('p', { style: 'margin-top:12px' }, msg),
+    h('details', { style: 'margin-top:8px' },
+      h('summary', { style: 'cursor:pointer;color:var(--accent);font-weight:600' }, 'Voir la procédure de déploiement Netlify'),
+      h('ol', { style: 'line-height:1.8;font-size:14px;margin-top:10px' },
+        h('li', {}, 'Crée un compte gratuit sur ', h('span', { class: 'mono' }, 'netlify.com'), ' (connexion via GitHub conseillée).'),
+        h('li', {}, 'Récupère une clé API sur ', h('span', { class: 'mono' }, 'console.anthropic.com'), ' → API Keys.'),
+        h('li', {}, 'Pousse le projet sur GitHub, puis importe-le sur Netlify (Add new site → Import an existing project).'),
+        h('li', {}, 'Dans Netlify → Site configuration → Environment variables, ajoute ', h('span', { class: 'mono' }, 'ANTHROPIC_API_KEY'), ' = ta clé.'),
+        h('li', {}, 'Redéploie. C\'est tout — l\'app détecte automatiquement l\'IA.')
+      )
+    )
+  );
+}
+
+// =====================================================================
+// INITIALISATION
+// =====================================================================
+render();                          // 1er rendu immédiat
+loadVoices().then(() => render()); // re-render quand les voix sont prêtes
+detectAI().then(() => render());   // re-render quand on sait si l'IA est dispo
+</script>
+
+</body>
+</html>

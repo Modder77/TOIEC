@@ -1,0 +1,41 @@
+# =====================================================================
+# netlify.toml — Configuration de déploiement Netlify
+# ---------------------------------------------------------------------
+# Site 100 % statique (un seul index.html) + une fonction serverless
+# (netlify/functions/chat.mjs, routée sur /api/chat).
+# Aucune commande de build : Netlify publie la racine telle quelle.
+# =====================================================================
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  # Pas de `command` : site statique, rien à compiler.
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# --- En-têtes (équivalents de l'ancien vercel.json) ---
+
+# Le service worker doit pouvoir contrôler toute la portée du site,
+# et ne jamais être servi depuis un cache HTTP périmé.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Les réponses de l'API ne doivent jamais être mises en cache.
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"
+
+# NB : pas de bloc [[redirects]] pour /api/* — le routage est assuré
+# directement par `export const config = { path: "/api/chat" }` dans la
+# fonction. Si une future version de Netlify ne supportait plus ce
+# routage, décommenter la redirection ci-dessous (rewrite, status 200) :
+#
+# [[redirects]]
+#   from = "/api/*"
+#   to = "/.netlify/functions/:splat"
+#   status = 200
