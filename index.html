@@ -1070,12 +1070,101 @@ function speak(text, voiceType = "female", rate = 0.95) {
 }
 
 // Stockage : localStorage (fonctionne hors-ligne, sur iPhone, et persiste)
+// =====================================================================
+// COMPTE & SYNCHRONISATION (pseudo + PIN optionnel, via /api/progress)
+// ---------------------------------------------------------------------
+// La progression vit en localStorage (cache hors-ligne) ET, si tu es
+// connecté(e), elle est synchronisée sur le serveur pour la retrouver sur
+// tes autres appareils. Sans compte, tout reste 100 % local comme avant.
+// =====================================================================
+let CURRENT_USER = localStorage.getItem('toeic_user') || null;
+let CURRENT_PIN = localStorage.getItem('toeic_pin') || '';
+
+function progressKey() {
+  return CURRENT_USER ? 'toeic_progress__' + CURRENT_USER : 'toeic_progress';
+}
 function loadProgress() {
-  try { return JSON.parse(localStorage.getItem('toeic_progress') || '{}'); }
+  try { return JSON.parse(localStorage.getItem(progressKey()) || '{}'); }
   catch { return {}; }
 }
+let _syncTimer = null;
 function saveProgress(p) {
-  try { localStorage.setItem('toeic_progress', JSON.stringify(p)); } catch(e) { console.error(e); }
+  try { localStorage.setItem(progressKey(), JSON.stringify(p)); } catch (e) { console.error(e); }
+  if (CURRENT_USER && navigator.onLine !== false) {
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(() => syncPush(p), 1200); // anti-rebond
+  }
+}
+
+// Envoie la progression au serveur (silencieux, en arrière-plan).
+async function syncPush(p) {
+  if (!CURRENT_USER) return;
+  if (state.auth) state.auth.syncing = true;
+  try {
+    const r = await fetch('/api/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: CURRENT_USER, pin: CURRENT_PIN, progress: p || state.progress }),
+    });
+    if (state.auth) { state.auth.syncing = false; if (r.ok) state.auth.lastSync = Date.now(); }
+  } catch { if (state.auth) state.auth.syncing = false; }
+}
+
+// Récupère la progression depuis le serveur au démarrage (si connecté + en ligne).
+async function syncPull() {
+  if (!CURRENT_USER || navigator.onLine === false) return;
+  try {
+    const r = await fetch('/api/progress?user=' + encodeURIComponent(CURRENT_USER) + (CURRENT_PIN ? '&pin=' + encodeURIComponent(CURRENT_PIN) : ''));
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.exists && data.progress && Object.keys(data.progress).length) {
+      state.progress = data.progress;
+      try { localStorage.setItem(progressKey(), JSON.stringify(state.progress)); } catch {}
+      if (state.auth) state.auth.lastSync = Date.now();
+      render();
+    }
+  } catch {}
+}
+
+// Connexion : charge la progression du serveur, ou crée le compte avec la
+// progression locale actuelle. Renvoie { ok } ou { error }.
+async function authLogin(user, pin) {
+  user = String(user || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+  pin = String(pin || '');
+  if (!user) return { error: "Choisis un pseudo (lettres, chiffres, - ou _)." };
+  let res;
+  try {
+    res = await fetch('/api/progress?user=' + encodeURIComponent(user) + (pin ? '&pin=' + encodeURIComponent(pin) : ''));
+  } catch {
+    return { error: "Réseau indisponible. Réessaie une fois en ligne." };
+  }
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 403) return { error: "PIN incorrect pour ce pseudo." };
+  if (!res.ok) return { error: data.error || "Erreur serveur." };
+
+  CURRENT_USER = user; CURRENT_PIN = pin;
+  localStorage.setItem('toeic_user', user);
+  localStorage.setItem('toeic_pin', pin);
+  state.auth.user = user;
+  state.auth.hasPin = !!(data.hasPin || pin);
+
+  if (data.exists && data.progress && Object.keys(data.progress).length) {
+    state.progress = data.progress; // le serveur fait foi
+    try { localStorage.setItem(progressKey(), JSON.stringify(state.progress)); } catch {}
+  } else {
+    await syncPush(state.progress); // nouveau compte : on y migre la progression locale
+  }
+  state.auth.lastSync = Date.now();
+  return { ok: true };
+}
+
+function authLogout() {
+  CURRENT_USER = null; CURRENT_PIN = '';
+  localStorage.removeItem('toeic_user');
+  localStorage.removeItem('toeic_pin');
+  state.auth.user = null; state.auth.hasPin = false; state.auth.lastSync = null;
+  state.progress = loadProgress(); // repasse sur le profil local de l'appareil
+  render();
 }
 
 // Précharger les voix sur iOS
@@ -1156,6 +1245,7 @@ let state = {
   speaking: { promptIdx: 0, transcript: '', recording: false, feedback: null, loading: false, supported: null, played: false },
   advice: { text: null, loading: false },
   review: { currentId: null, chosen: null, mode: 'due' },
+  auth: { user: CURRENT_USER, hasPin: !!CURRENT_PIN, syncing: false, lastSync: null, status: 'idle', error: null, userInput: CURRENT_USER || '', pinInput: '' },
 };
 
 function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
@@ -1303,8 +1393,45 @@ function renderHeader() {
       h('div', { class: 'lab' }, 'Aujourd\'hui'),
       h('div', { style: 'font-family:Fraunces;font-style:italic;font-size:15px;margin-bottom:4px' }, today),
       h('span', { class: 'num' }, total),
-      h('div', { class: 'lab', style: 'font-size:10px;margin-top:-2px' }, 'exercices')
+      h('div', { class: 'lab', style: 'font-size:10px;margin-top:-2px' }, 'exercices'),
+      state.auth.user
+        ? h('button', { class: 'chip', style: 'margin-top:8px;cursor:pointer', onclick: () => { state.view = 'settings'; render(); window.scrollTo(0, 0); } }, '👤 ' + state.auth.user)
+        : h('button', { class: 'chip', style: 'margin-top:8px;cursor:pointer', onclick: () => { state.view = 'login'; render(); window.scrollTo(0, 0); } }, 'Se connecter')
     )
+  );
+}
+
+// --- CONNEXION / SYNCHRONISATION (pseudo + PIN optionnel) ---
+function renderLogin() {
+  const a = state.auth;
+  const inputStyle = 'width:100%;padding:11px 13px;border:1px solid rgba(0,0,0,0.18);border-radius:9px;font-size:16px;font-family:inherit;box-sizing:border-box;margin-top:4px;background:#fff';
+  const submit = async () => {
+    if (a.status === 'loading') return;
+    a.status = 'loading'; a.error = null; render();
+    const res = await authLogin(a.userInput, a.pinInput);
+    if (res.error) { a.status = 'idle'; a.error = res.error; render(); return; }
+    a.status = 'idle'; a.error = null; a.pinInput = '';
+    state.view = 'dashboard'; render(); window.scrollTo(0, 0);
+  };
+  const card = h('div', { class: 'card', style: 'max-width:440px' },
+    h('h3', { style: 'margin-top:0' }, 'Connexion / Synchronisation'),
+    h('p', { class: 'quiet-text' }, 'Entre un pseudo pour retrouver ta progression sur tous tes appareils. Le PIN est optionnel : il protège ton pseudo. Sans compte, ta progression reste enregistrée sur cet appareil.'),
+    h('label', { class: 'lab', style: 'display:block;margin-top:14px' }, 'Pseudo'),
+    h('input', { style: inputStyle, value: a.userInput || '', placeholder: 'ex. johan', maxlength: '40', oninput: (e) => { a.userInput = e.target.value; }, onkeydown: (e) => { if (e.key === 'Enter') submit(); } }),
+    h('label', { class: 'lab', style: 'display:block;margin-top:12px' }, 'PIN (optionnel)'),
+    h('input', { style: inputStyle, type: 'password', inputmode: 'numeric', value: a.pinInput || '', placeholder: '••••', maxlength: '12', oninput: (e) => { a.pinInput = e.target.value; }, onkeydown: (e) => { if (e.key === 'Enter') submit(); } }),
+    a.error ? h('div', { class: 'feedback wrong', style: 'margin-top:12px' }, a.error) : null,
+    h('div', { style: 'margin-top:16px;display:flex;gap:10px;flex-wrap:wrap' },
+      h('button', { class: 'btn btn-accent', disabled: a.status === 'loading', onclick: submit },
+        a.status === 'loading' ? h('span', {}, h('span', { class: 'spin' }), 'Connexion…') : 'Se connecter'),
+      h('button', { class: 'btn btn-ghost', onclick: () => { state.view = 'dashboard'; render(); window.scrollTo(0, 0); } }, 'Continuer sans compte')
+    ),
+    h('p', { class: 'quiet-text', style: 'margin-top:14px;font-size:12px' }, 'Si le pseudo existe déjà, ta progression enregistrée est chargée. Sinon, un compte est créé avec ta progression actuelle. (Le pseudo n\'est pas sensible : n\'y mets pas d\'info personnelle.)')
+  );
+  return h('div', {},
+    h('div', { class: 'section-kicker' }, '— Compte'),
+    h('h2', { class: 'section-title' }, 'Synchronise ta ', h('em', {}, 'progression')),
+    h('div', { style: 'margin-top:20px' }, card)
   );
 }
 
@@ -1349,6 +1476,7 @@ function renderView() {
     case 'tutor': return renderTutor();
     case 'mock': return renderMock();
     case 'settings': return renderSettings();
+    case 'login': return renderLogin();
   }
 }
 
@@ -2632,13 +2760,27 @@ function mmss(sec) {
 function renderSettings() {
   const p = state.progress;
   const reset = () => {
-    if (confirm('Réinitialiser toute ta progression ? Cette action est irréversible.')) {
-      state.progress = {}; saveProgress({}); render();
-    }
+    const msg = state.auth.user
+      ? 'Réinitialiser toute ta progression, y compris la version synchronisée du compte « ' + state.auth.user + ' » ? Action irréversible.'
+      : 'Réinitialiser toute ta progression ? Cette action est irréversible.';
+    if (confirm(msg)) { state.progress = {}; saveProgress({}); render(); }
   };
   return h('div', {},
     h('div', { class: 'section-kicker' }, '— Paramètres'),
     h('h2', { class: 'section-title' }, h('em', {}, 'Réglages'), ' & données'),
+    h('div', { class: 'card', style: 'margin-top:18px;border-left:3px solid var(--accent)' },
+      h('h3', {}, 'Compte & synchronisation'),
+      state.auth.user
+        ? h('div', {},
+            h('p', {}, 'Connecté : ', h('strong', {}, state.auth.user), state.auth.hasPin ? ' 🔒' : ''),
+            h('p', { class: 'quiet-text' }, state.auth.lastSync ? ('Dernière synchro : ' + new Date(state.auth.lastSync).toLocaleTimeString('fr-FR')) : 'Synchronisation automatique à chaque progrès.'),
+            h('div', { class: 'settings-row', style: 'border-bottom:0;padding-top:6px' },
+              h('button', { class: 'btn btn-outline', onclick: () => { syncPush(state.progress); render(); } }, '⟳ Synchroniser'),
+              h('button', { class: 'btn btn-ghost', onclick: authLogout }, 'Se déconnecter')))
+        : h('div', {},
+            h('p', { class: 'quiet-text' }, 'Ta progression est enregistrée sur cet appareil. Connecte-toi avec un pseudo pour la retrouver sur tes autres appareils.'),
+            h('button', { class: 'btn btn-accent', onclick: () => { state.view = 'login'; render(); window.scrollTo(0, 0); } }, 'Se connecter / créer un compte'))
+    ),
     h('div', { class: 'card', style: 'margin-top:18px' },
       h('h3', {}, 'Progression'),
       h('div', { class: 'settings-row' },
@@ -2721,6 +2863,7 @@ function renderAIStatusCard() {
 render();                          // 1er rendu immédiat
 loadVoices().then(() => render()); // re-render quand les voix sont prêtes
 detectAI().then(() => render());   // re-render quand on sait si l'IA est dispo
+syncPull();                        // récupère la progression du compte (si connecté + en ligne)
 </script>
 
 </body>
