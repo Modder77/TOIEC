@@ -787,7 +787,7 @@ let state = {
   progress: loadProgress(),
   vocab: { theme: 'business', mode: 'flashcards', idx: 0, flipped: false, direction: 'en-fr', quizOpts: null, quizAns: null },
   listening: { lessonIdx: 0, hasPlayed: false, isPlaying: false, answers: {}, submitted: false, showTranscript: false },
-  reading: { idx: 0, answers: {}, submitted: false, aiPassage: null, aiAnswers: {}, aiSubmitted: false, aiLoading: false, source: 'builtin' },
+  reading: { idx: 0, answers: {}, submitted: false },
   grammar: { order: shuffle([...GRAMMAR_BANK.keys()]), idx: 0, chosen: null, ok: 0, total: 0 },
   writing: { idx: 0, text: '', feedback: null, aiFeedback: null, loading: false },
   mock: { started: false, finished: false, answers: {}, timeLeft: 20*60, tab: 'grammar', test: null, timerId: null },
@@ -1405,8 +1405,7 @@ function renderListening() {
         h('div', {}, `${ok} / ${lesson.questions.length} bonnes réponses`),
         h('div', { class: 'stage-controls' },
           h('button', { class: 'btn btn-outline', onclick: () => reset(l.lessonIdx) }, 'Recommencer'),
-          l.lessonIdx < LISTENING_BANK.length - 1 ?
-            h('button', { class: 'btn', onclick: () => reset(l.lessonIdx + 1) }, 'Suivant →') : null
+          h('button', { class: 'btn', onclick: () => reset((l.lessonIdx + 1) % LISTENING_BANK.length) }, 'Suivant →')
         )
       ));
     }
@@ -1422,26 +1421,22 @@ function renderListening() {
 // --- READING ---
 function renderReading() {
   const r = state.reading;
-  const usingAI = r.source === 'ai' && r.aiPassage;
-  const passage = usingAI ? r.aiPassage : READING_PASSAGES[r.idx];
-  const answers = usingAI ? r.aiAnswers : r.answers;
-  const submitted = usingAI ? r.aiSubmitted : r.submitted;
+  // 100 % textes locaux, en boucle (aucun token consommé)
+  const passage = READING_PASSAGES[r.idx];
+  const answers = r.answers;
+  const submitted = r.submitted;
 
   const reset = (newIdx) => {
     if (typeof newIdx === 'number') r.idx = newIdx;
-    r.source = 'builtin'; r.answers = {}; r.submitted = false; render();
+    r.answers = {}; r.submitted = false; render();
   };
-  const resetAI = () => { r.aiAnswers = {}; r.aiSubmitted = false; render(); };
 
-  const setAnswer = (qi, oi) => {
-    if (usingAI) r.aiAnswers[qi] = oi; else r.answers[qi] = oi;
-    render();
-  };
+  const setAnswer = (qi, oi) => { r.answers[qi] = oi; render(); };
 
   const submit = () => {
     const correct = passage.questions.filter((q, i) => answers[i] === q.a).length;
     passage.questions.forEach((q, i) => { if (answers[i] !== q.a) logMistake({ module: 'reading', topic: `Reading — ${passage.title}`, q: q.q, opts: q.opts, a: q.a, expl: '' }); });
-    if (usingAI) r.aiSubmitted = true; else r.submitted = true;
+    r.submitted = true;
     updateProgress(p => {
       p.reading = p.reading || { attempted: 0, correct: 0 };
       p.reading.attempted += passage.questions.length;
@@ -1451,38 +1446,13 @@ function renderReading() {
     render();
   };
 
-  const generateAI = async () => {
-    r.aiLoading = true; render();
-    const topics = ['un email professionnel', 'une note de service interne', 'une offre d\'emploi', 'un article de presse économique', 'une publicité', 'un avis client', 'un planning d\'événement', 'une notice de produit'];
-    const topic = topics[Math.floor(Math.random() * topics.length)];
-    const system = "Tu génères des exercices de compréhension écrite de type TOEIC (Reading Part 7). Renvoie UNIQUEMENT un objet JSON valide, sans texte autour ni backticks. Format exact : {\"title\":\"titre court\",\"text\":\"le texte en anglais, 120-180 mots, réaliste\",\"questions\":[{\"q\":\"question en anglais\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"a\":0}]}. Produis exactement 4 questions, le champ 'a' est l'index (0-3) de la bonne réponse. Le texte doit être en anglais professionnel réaliste, et les questions doivent tester la compréhension (détails, but, inférence, vocabulaire).";
-    try {
-      const obj = await callAIJson(
-        [{ role: 'user', content: `Génère un exercice de compréhension écrite TOEIC basé sur ${topic}.` }],
-        system, 2000
-      );
-      if (obj && obj.text && Array.isArray(obj.questions)) {
-        r.aiPassage = obj; r.source = 'ai'; r.aiAnswers = {}; r.aiSubmitted = false;
-      }
-    } catch (e) {
-      alert("Génération échouée : " + e.message);
-    }
-    r.aiLoading = false; render();
-  };
-
   const view = h('div', {},
     h('div', { class: 'section-kicker' }, '— Module III'),
     h('h2', { class: 'section-title' }, h('em', {}, 'Reading'), ' Comprehension'),
     h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, 'Lis le texte, puis réponds aux questions.'),
-    h('div', { class: 'ribbon', style: 'margin-bottom:12px' },
-      READING_PASSAGES.map((p, i) => h('button', { class: `chip ${(!usingAI && r.idx === i) ? 'accent' : ''}`, onclick: () => reset(i) }, `${i + 1}. ${p.title}`)),
-      r.aiPassage ? h('button', { class: `chip ${usingAI ? 'accent' : ''}`, onclick: () => { r.source = 'ai'; render(); } }, '✦ Texte IA') : null
-    ),
-    AI_ENABLED === true
-      ? h('div', { style: 'margin-bottom:18px' },
-          h('button', { class: 'btn btn-outline', disabled: r.aiLoading, onclick: generateAI },
-            r.aiLoading ? h('span', {}, h('span', { class: 'spin' }), 'Génération du texte…') : '✦ Générer un nouveau texte'))
-      : null
+    h('div', { class: 'ribbon', style: 'margin-bottom:18px' },
+      READING_PASSAGES.map((p, i) => h('button', { class: `chip ${r.idx === i ? 'accent' : ''}`, onclick: () => reset(i) }, `${i + 1}. ${p.title}`))
+    )
   );
 
   const textCol = h('div', {},
@@ -1523,12 +1493,8 @@ function renderReading() {
       h('h5', {}, 'Résultat'),
       h('div', {}, `${ok} / ${passage.questions.length} bonnes réponses`),
       h('div', { class: 'stage-controls' },
-        usingAI
-          ? h('button', { class: 'btn btn-outline', onclick: resetAI }, 'Recommencer')
-          : h('button', { class: 'btn btn-outline', onclick: () => reset(r.idx) }, 'Recommencer'),
-        usingAI
-          ? (AI_ENABLED === true ? h('button', { class: 'btn', disabled: r.aiLoading, onclick: generateAI }, '✦ Nouveau texte IA') : null)
-          : (r.idx < READING_PASSAGES.length - 1 ? h('button', { class: 'btn', onclick: () => reset(r.idx + 1) }, 'Texte suivant →') : null)
+        h('button', { class: 'btn btn-outline', onclick: () => reset(r.idx) }, 'Recommencer'),
+        h('button', { class: 'btn', onclick: () => reset((r.idx + 1) % READING_PASSAGES.length) }, 'Texte suivant →')
       )
     ));
   }
