@@ -659,15 +659,16 @@ async function callAIJson(messages, system, maxTokens = 1500) {
 let state = {
   view: 'dashboard',
   progress: loadProgress(),
-  vocab: { theme: 'business', mode: 'flashcards', idx: 0, flipped: false, direction: 'en-fr', quizOpts: null, quizAns: null },
+  vocab: { theme: 'business', mode: 'flashcards', idx: 0, flipped: false, direction: 'en-fr', quizOpts: null, quizAns: null, genLoading: false },
   listening: { lessonIdx: 0, hasPlayed: false, isPlaying: false, answers: {}, submitted: false, showTranscript: false },
   reading: { idx: 0, answers: {}, submitted: false, aiPassage: null, aiAnswers: {}, aiSubmitted: false, aiLoading: false, source: 'builtin' },
-  grammar: { order: shuffle([...GRAMMAR_BANK.keys()]), idx: 0, chosen: null, ok: 0, total: 0, aiQueue: [], aiLoading: false, source: 'builtin' },
+  grammar: { order: shuffle([...GRAMMAR_BANK.keys()]), idx: 0, chosen: null, ok: 0, total: 0, aiQueue: [], aiLoading: false, source: 'builtin', endless: false },
   writing: { idx: 0, text: '', feedback: null, aiFeedback: null, loading: false },
   mock: { started: false, finished: false, answers: {}, timeLeft: 20*60, tab: 'grammar', test: null, timerId: null },
   tutor: { messages: [], input: '', loading: false },
   speaking: { promptIdx: 0, transcript: '', recording: false, feedback: null, loading: false, supported: null, played: false },
   advice: { text: null, loading: false },
+  review: { currentId: null, chosen: null, mode: 'due' },
 };
 
 function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
@@ -675,6 +676,74 @@ function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 function updateProgress(updater) {
   state.progress = updater(state.progress);
   saveProgress(state.progress);
+}
+
+// =====================================================================
+// SUIVI DES ERREURS & RÉVISION (répétition espacée, façon Leitner)
+// ---------------------------------------------------------------------
+// Chaque mauvaise réponse est consignée dans progress.review. Le module
+// « Révisions » re-sert ces items, mélangés et pondérés par le nombre
+// d'échecs et la « boîte » Leitner (1 = à revoir vite … 5 = maîtrisé,
+// l'item est alors retiré). C'est aussi la matière première du coach IA.
+// =====================================================================
+const REVIEW_DELAYS = [0, 0, 60e3, 5*60e3, 60*60e3, 24*60*60e3]; // ms avant réapparition selon la boîte (index 1..5)
+
+function reviewKey(module, q) {
+  return module + '|' + String(q).trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 180);
+}
+
+// Consigne une erreur (ou la réactive si elle est déjà connue).
+function logMistake(item) {
+  if (!item || !item.q || !Array.isArray(item.opts) || item.opts.length < 2) return;
+  updateProgress(p => {
+    p.review = p.review || [];
+    const id = reviewKey(item.module, item.q);
+    const ex = p.review.find(r => r.id === id);
+    if (ex) {
+      ex.box = 1; ex.wrong = (ex.wrong || 0) + 1; ex.due = Date.now(); ex.ts = Date.now();
+      ex.opts = item.opts; ex.a = item.a ?? 0; ex.expl = item.expl || ex.expl || ''; ex.topic = item.topic || ex.topic;
+    } else {
+      p.review.push({
+        id, module: item.module, topic: item.topic || item.module,
+        q: item.q, opts: item.opts, a: item.a ?? 0, expl: item.expl || '',
+        box: 1, wrong: 1, seen: 0, due: Date.now(), ts: Date.now()
+      });
+    }
+    if (p.review.length > 500) p.review = p.review.slice(-500); // garde-fou mémoire
+    return p;
+  });
+}
+
+// Enregistre le résultat d'une révision et reprogramme l'item.
+function logReviewResult(id, ok) {
+  updateProgress(p => {
+    p.review = p.review || [];
+    const it = p.review.find(r => r.id === id);
+    if (!it) return p;
+    it.seen = (it.seen || 0) + 1; it.ts = Date.now();
+    if (ok) {
+      it.box = Math.min(5, (it.box || 1) + 1);
+      if (it.box >= 5) { p.review = p.review.filter(r => r.id !== id); return p; } // maîtrisé → retiré
+    } else {
+      it.box = 1; it.wrong = (it.wrong || 0) + 1;
+    }
+    it.due = Date.now() + (REVIEW_DELAYS[it.box] || 0);
+    return p;
+  });
+}
+
+function reviewAll() { return state.progress.review || []; }
+function reviewDue() {
+  const now = Date.now();
+  return reviewAll()
+    .filter(r => (r.due || 0) <= now)
+    .sort((a, b) => (b.wrong - a.wrong) || (a.box - b.box) || (a.due - b.due));
+}
+// Récap des faiblesses (par thème/module), pondéré par le nombre d'échecs.
+function weaknessSummary() {
+  const by = {};
+  reviewAll().forEach(r => { const k = r.topic || r.module; by[k] = (by[k] || 0) + (r.wrong || 1); });
+  return Object.entries(by).sort((a, b) => b[1] - a[1]); // [[topic, poids], …] décroissant
 }
 
 // =====================================================================
@@ -755,6 +824,7 @@ function renderHeader() {
 function renderNav() {
   const items = [
     ['dashboard', 'Accueil'],
+    ['review', 'Révisions'],
     ['vocabulary', 'Vocab.'],
     ['listening', 'Listening'],
     ['reading', 'Reading'],
@@ -776,6 +846,7 @@ function renderNav() {
 function renderView() {
   switch (state.view) {
     case 'dashboard': return renderDashboard();
+    case 'review': return renderReview();
     case 'vocabulary': return renderVocabulary();
     case 'listening': return renderListening();
     case 'reading': return renderReading();
@@ -870,11 +941,14 @@ function renderAdviceCard() {
       speaking: p.speaking?.attempted || 0,
       examens_blancs: p.mock?.completed || 0,
       dernier_score_examen: p.mock?.lastScore ?? 'aucun',
+      points_faibles: weaknessSummary().slice(0, 6).map(([t, n]) => `${t} (${n} erreur·s)`),
+      erreurs_a_reviser_maintenant: reviewDue().length,
+      exemples_d_erreurs: reviewAll().slice(-8).map(r => ({ theme: r.topic, question: r.q, bonne_reponse: r.opts?.[r.a] })),
     };
-    const system = "Tu es un coach TOEIC expérimenté et bienveillant. À partir des statistiques de progression d'un apprenant français, tu donnes des conseils CONCIS, concrets et actionnables EN FRANÇAIS. Structure ta réponse en 3 parties courtes : 1) Un constat (2 phrases max), 2) Les 2-3 priorités à travailler maintenant (puces), 3) Une suggestion de plan pour la semaine (2-3 puces). Sois précis et motivant, sans bla-bla. N'invente pas de chiffres : base-toi uniquement sur les stats fournies.";
-    const userMsg = "Voici mes statistiques d'entraînement actuelles :\n" + JSON.stringify(stats, null, 2) + "\n\nQue me conseilles-tu ?";
+    const system = "Tu es un coach TOEIC expérimenté et bienveillant. À partir des statistiques ET des erreurs réelles d'un apprenant français, tu rédiges EN FRANÇAIS une LEÇON PERSONNALISÉE, concise et actionnable. Structure ta réponse ainsi : 1) « Constat » : 2 phrases max, fondées sur ses points faibles réels. 2) « Ta priorité » : le point le plus faible, avec une mini-leçon de 3 à 5 lignes (la règle + un exemple corrigé, en t'appuyant si possible sur ses erreurs réelles). 3) « Ton plan » : 3 puces concrètes ; invite-le explicitement à utiliser l'onglet « Révisions » de l'app pour retravailler ses erreurs au bon moment. Sois précis, motivant, sans bla-bla. N'invente ni chiffres ni erreurs : appuie-toi uniquement sur les données fournies.";
+    const userMsg = "Voici mes statistiques et mes erreurs récentes :\n" + JSON.stringify(stats, null, 2) + "\n\nDonne-moi ma leçon personnalisée du jour.";
     try {
-      a.text = await callAI([{ role: 'user', content: userMsg }], system, 900);
+      a.text = await callAI([{ role: 'user', content: userMsg }], system, 1200);
     } catch (e) {
       a.text = "⚠ " + e.message;
     }
@@ -883,13 +957,21 @@ function renderAdviceCard() {
 
   const card = h('div', { class: 'card', style: 'margin-top:24px;border-left:3px solid var(--gold)' },
     h('div', { style: 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px' },
-      h('h3', { style: 'margin:0' }, '✦ Conseils personnalisés'),
+      h('h3', { style: 'margin:0' }, '✦ Ma leçon personnalisée'),
       AI_ENABLED === true
         ? h('button', { class: 'btn', onclick: getAdvice, disabled: a.loading },
-            a.loading ? h('span', {}, h('span', { class: 'spin' }), 'Analyse…') : (a.text ? 'Réactualiser' : 'Obtenir mes conseils'))
+            a.loading ? h('span', {}, h('span', { class: 'spin' }), 'Analyse…') : (a.text ? 'Réactualiser' : 'Obtenir ma leçon'))
         : h('span', { class: 'chip' }, 'IA non disponible')
     )
   );
+
+  const reviewCount = reviewAll().length;
+  if (reviewCount > 0) {
+    card.appendChild(h('div', { style: 'margin-top:12px' },
+      h('button', { class: 'btn btn-outline', onclick: () => { state.view = 'review'; render(); window.scrollTo(0, 0); } },
+        `✦ Réviser mes erreurs (${reviewCount})`)
+    ));
+  }
 
   if (a.text) {
     card.appendChild(h('div', { class: 'feedback', style: 'border-color:var(--gold);margin-top:14px' },
@@ -897,11 +979,109 @@ function renderAdviceCard() {
   } else if (!a.loading) {
     card.appendChild(h('p', { class: 'quiet-text', style: 'margin-top:12px' },
       AI_ENABLED === true
-        ? 'Clique pour obtenir une analyse de ta progression et un plan de travail sur mesure.'
+        ? 'Clique pour une leçon du jour ciblée sur tes erreurs réelles : constat, mini-leçon sur ton point faible n°1, et plan de travail.'
         : 'Les conseils IA nécessitent le déploiement sur Netlify avec ta clé API (voir l\'onglet ⚙).'));
   }
 
   return card;
+}
+
+// --- RÉVISIONS (randomizer pondéré sur tes erreurs) ---
+function renderReview() {
+  const rv = state.review;
+  const all = reviewAll();
+  const forced = rv.mode === 'all';
+  const pool = forced
+    ? all.slice().sort((a, b) => (b.wrong - a.wrong) || (a.box - b.box))
+    : reviewDue();
+
+  const header = h('div', {},
+    h('div', { class: 'section-kicker' }, '— Révisions'),
+    h('h2', { class: 'section-title' }, 'Tes ', h('em', {}, 'erreurs'), ', re-servies au bon moment'),
+    h('p', { class: 'quiet-text', style: 'margin:10px 0 18px' },
+      `${all.length} item(s) en mémoire · ${reviewDue().length} à revoir maintenant`)
+  );
+
+  // Aucune erreur enregistrée pour l'instant
+  if (all.length === 0) {
+    return h('div', {}, header,
+      h('div', { class: 'card', style: 'text-align:center;padding:36px' },
+        h('div', { style: 'font-size:34px;margin-bottom:8px' }, '✓'),
+        h('h3', {}, 'Rien à réviser pour l\'instant'),
+        h('p', { class: 'quiet-text', style: 'margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto' },
+          'Fais des exercices (Vocabulaire en quiz, Grammar, Reading, Listening, Examen). Chaque erreur atterrira ici et sera retravaillée — mélangée et répétée — jusqu\'à ce que tu la maîtrises.'),
+        h('button', { class: 'btn', style: 'margin-top:14px', onclick: () => { state.view = 'grammar'; render(); window.scrollTo(0, 0); } }, 'Commencer par la grammaire →')
+      )
+    );
+  }
+
+  // Des erreurs existent mais aucune n'est due maintenant
+  if (pool.length === 0) {
+    return h('div', {}, header,
+      h('div', { class: 'card', style: 'text-align:center;padding:32px' },
+        h('div', { style: 'font-size:30px;margin-bottom:6px' }, '🌱'),
+        h('h3', {}, 'Tout est à jour !'),
+        h('p', { class: 'quiet-text', style: 'margin-top:8px' }, 'Tes erreurs récentes viennent d\'être révisées. Reviens un peu plus tard, ou force une session tout de suite.'),
+        h('button', { class: 'btn', style: 'margin-top:14px', onclick: () => { rv.mode = 'all'; rv.currentId = null; rv.chosen = null; render(); } }, 'Réviser quand même')
+      ),
+      weaknessCard()
+    );
+  }
+
+  // Item courant (stable jusqu'à la réponse)
+  let cur = pool.find(r => r.id === rv.currentId);
+  if (!cur) { cur = pool[0]; rv.currentId = cur.id; rv.chosen = null; }
+
+  const choose = (i) => {
+    if (rv.chosen !== null) return;
+    rv.chosen = i;
+    logReviewResult(cur.id, i === cur.a);
+    render();
+  };
+  const nextItem = () => { rv.chosen = null; rv.currentId = null; render(); window.scrollTo(0, 0); };
+
+  const card = h('div', { class: 'card' },
+    h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px' },
+      h('span', { class: 'chip accent' }, cur.topic || cur.module),
+      h('span', { class: 'chip' }, `raté ${cur.wrong}×`),
+      h('span', { class: 'chip' }, `niveau ${cur.box}/5`)
+    ),
+    h('div', { class: 'display', style: 'font-size:20px;line-height:1.5;margin-bottom:8px' }, cur.q),
+    h('div', { class: 'opts' }, cur.opts.map((opt, i) => {
+      let cls = 'opt';
+      if (rv.chosen !== null) {
+        if (i === cur.a) cls += ' correct';
+        else if (i === rv.chosen) cls += ' wrong';
+        else cls += ' disabled';
+      }
+      return h('button', { class: cls, onclick: () => choose(i) },
+        h('span', { class: 'marker' }, String.fromCharCode(65 + i)), ' ' + opt);
+    }))
+  );
+
+  if (rv.chosen !== null) {
+    const ok = rv.chosen === cur.a;
+    card.appendChild(h('div', { class: `feedback ${ok ? 'correct' : 'wrong'}` },
+      h('h5', {}, ok ? '✓ Correct — tu montes d\'un niveau' : '✗ Encore à revoir — on le reverra bientôt'),
+      h('div', {}, h('strong', {}, 'Réponse : '), `${String.fromCharCode(65 + cur.a)}. ${cur.opts[cur.a]}`),
+      cur.expl ? h('div', { style: 'margin-top:6px' }, cur.expl) : null,
+      h('button', { class: 'btn', style: 'margin-top:12px', onclick: nextItem }, 'Suivant →')
+    ));
+  }
+
+  return h('div', {}, header, card, weaknessCard());
+}
+
+// Carte récap des faiblesses + raccourci vers le coach personnalisé
+function weaknessCard() {
+  const w = weaknessSummary();
+  if (w.length === 0) return null;
+  return h('div', { class: 'card', style: 'margin-top:18px;border-left:3px solid var(--gold)' },
+    h('h3', { style: 'margin:0 0 10px' }, 'Tes points faibles'),
+    h('div', { class: 'ribbon' }, w.slice(0, 8).map(([topic, n]) =>
+      h('span', { class: 'chip' }, `${topic} · ${n}`))),
+    h('button', { class: 'btn btn-outline', style: 'margin-top:14px', onclick: () => { state.view = 'dashboard'; render(); window.scrollTo(0, 0); } }, '✦ Voir ma leçon personnalisée')
+  );
 }
 
 // --- VOCABULAIRE ---
@@ -917,6 +1097,27 @@ function renderVocabulary() {
     updateProgress(p => { p.vocab = p.vocab || { studied: 0, correct: 0 }; p.vocab.studied++; return p; });
     next();
   };
+  // Vocabulaire infini : génère de nouvelles fiches IA pour le thème courant
+  const genWords = async () => {
+    if (v.genLoading) return;
+    v.genLoading = true; render();
+    const existing = words.map(w => w.en);
+    const system = "Tu génères du vocabulaire d'anglais professionnel pour le TOEIC. Renvoie UNIQUEMENT un tableau JSON valide, sans texte ni backticks. Format exact : [{\"en\":\"mot ou expression\",\"fr\":\"traduction française\",\"ex\":\"phrase d'exemple en anglais\"}]. Niveau intermédiaire à avancé, mots réellement utiles en contexte professionnel.";
+    try {
+      const items = await callAIJson(
+        [{ role: 'user', content: `Donne 10 nouveaux mots de vocabulaire sur le thème « ${VOCAB_THEMES[v.theme].label} » pour le TOEIC. N'utilise AUCUN de ces mots déjà présents : ${existing.join(', ')}.` }],
+        system, 1500
+      );
+      if (Array.isArray(items)) {
+        const seen = new Set(existing.map(s => String(s).toLowerCase()));
+        const fresh = items
+          .filter(it => it && it.en && it.fr && !seen.has(String(it.en).toLowerCase()))
+          .map(it => ({ en: it.en, fr: it.fr, ex: it.ex || '' }));
+        if (fresh.length) VOCAB_THEMES[v.theme].words = words.concat(fresh);
+      }
+    } catch (e) { alert("Génération échouée : " + e.message); }
+    v.genLoading = false; render();
+  };
 
   const view = h('div', {},
     h('div', { class: 'section-kicker' }, '— Module I'),
@@ -930,7 +1131,8 @@ function renderVocabulary() {
     h('div', { class: 'ribbon', style: 'margin-bottom:20px' },
       h('button', { class: `chip ${v.mode === 'flashcards' ? 'accent' : ''}`, onclick: () => { v.mode = 'flashcards'; render(); } }, 'Cartes mémoire'),
       h('button', { class: `chip ${v.mode === 'quiz' ? 'accent' : ''}`, onclick: () => { v.mode = 'quiz'; v.quizOpts = null; render(); } }, 'Quiz'),
-      h('span', { style: 'margin-left:12px;font-size:12px;color:var(--ink-mute)' }, `Mot ${v.idx + 1} / ${words.length}`)
+      AI_ENABLED === true ? h('button', { class: 'chip', style: 'border-color:var(--gold);color:var(--gold)', onclick: genWords, disabled: v.genLoading }, v.genLoading ? '⏳…' : '✦ Plus de mots') : null,
+      h('span', { style: 'margin-left:12px;font-size:12px;color:var(--ink-mute)' }, `Mot ${v.idx + 1} / ${words.length}${AI_ENABLED === true ? ' · ∞' : ''}`)
     )
   );
 
@@ -963,6 +1165,7 @@ function renderVocabulary() {
       if (v.quizAns) return;
       v.quizAns = w;
       const ok = w.en === cur.en;
+      if (!ok) logMistake({ module: 'vocab', topic: VOCAB_THEMES[v.theme].label, q: cur.en, opts: v.quizOpts.map(o => o.fr), a: v.quizOpts.findIndex(o => o.en === cur.en), expl: `${cur.fr} — « ${cur.ex} »` });
       updateProgress(p => {
         p.vocab = p.vocab || { studied: 0, correct: 0 };
         p.vocab.studied++;
@@ -1026,6 +1229,7 @@ function renderListening() {
   const submit = () => {
     l.submitted = true;
     const correct = lesson.questions.filter((q, i) => l.answers[i] === q.a).length;
+    lesson.questions.forEach((q, i) => { if (l.answers[i] !== q.a) logMistake({ module: 'listening', topic: `Listening — ${lesson.title}`, q: q.q, opts: q.opts, a: q.a, expl: '' }); });
     updateProgress(p => {
       p.listening = p.listening || { attempted: 0, correct: 0 };
       p.listening.attempted += lesson.questions.length;
@@ -1132,6 +1336,7 @@ function renderReading() {
 
   const submit = () => {
     const correct = passage.questions.filter((q, i) => answers[i] === q.a).length;
+    passage.questions.forEach((q, i) => { if (answers[i] !== q.a) logMistake({ module: 'reading', topic: `Reading — ${passage.title}`, q: q.q, opts: q.opts, a: q.a, expl: '' }); });
     if (usingAI) r.aiSubmitted = true; else r.submitted = true;
     updateProgress(p => {
       p.reading = p.reading || { attempted: 0, correct: 0 };
@@ -1236,20 +1441,27 @@ function renderGrammar() {
   const q = usingAI ? g.aiQueue[g.idx % g.aiQueue.length] : GRAMMAR_BANK[g.order[g.idx]];
   const poolLen = usingAI ? g.aiQueue.length : g.order.length;
 
-  const generateAI = async () => {
-    g.aiLoading = true; render();
+  const generateAI = async (silent) => {
+    if (g.aiLoading) return;
+    g.aiLoading = true; if (!silent) render();
+    const weak = weaknessSummary().filter(([t]) => /grammaire|grammar/i.test(t)).slice(0, 3).map(([t]) => t);
+    const focus = weak.length ? ' Oriente une partie des questions vers mes points faibles : ' + weak.join(', ') + '.' : '';
     const system = "Tu génères des questions de grammaire de type TOEIC Part 5 (phrase à trou, 4 options). Renvoie UNIQUEMENT un tableau JSON valide, sans texte autour, sans backticks. Format exact : [{\"q\":\"phrase avec ___\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"a\":0,\"expl\":\"explication courte en français\"}]. Le champ 'a' est l'index (0-3) de la bonne réponse. Varie les points testés : temps, prépositions, gérondifs, comparatifs, connecteurs, voix passive, structures corrélatives. Niveau intermédiaire à avancé.";
     try {
       const items = await callAIJson(
-        [{ role: 'user', content: "Génère 8 nouvelles questions de grammaire TOEIC Part 5, variées et de bonne qualité." }],
+        [{ role: 'user', content: "Génère 8 nouvelles questions de grammaire TOEIC Part 5, variées et de bonne qualité." + focus }],
         system, 2500
       );
       if (Array.isArray(items) && items.length > 0) {
-        g.aiQueue = items.filter(it => it.q && Array.isArray(it.opts) && typeof it.a === 'number');
-        g.source = 'ai'; g.idx = 0; g.chosen = null;
+        const clean = items.filter(it => it.q && Array.isArray(it.opts) && typeof it.a === 'number');
+        const seen = new Set(g.aiQueue.map(it => it.q));
+        const startLen = g.aiQueue.length;
+        g.aiQueue = g.aiQueue.concat(clean.filter(it => !seen.has(it.q)));
+        g.source = 'ai'; g.endless = true;
+        if (!silent) { g.idx = startLen; g.chosen = null; }
       }
     } catch (e) {
-      alert("Génération échouée : " + e.message);
+      if (!silent) alert("Génération échouée : " + e.message);
     }
     g.aiLoading = false; render();
   };
@@ -1260,6 +1472,7 @@ function renderGrammar() {
     if (g.chosen !== null) return;
     g.chosen = i;
     const ok = i === q.a;
+    if (!ok) logMistake({ module: 'grammar', topic: 'Grammaire', q: q.q, opts: q.opts, a: q.a, expl: q.expl });
     g.total++; if (ok) g.ok++;
     updateProgress(p => {
       p.grammar = p.grammar || { attempted: 0, correct: 0 };
@@ -1269,7 +1482,13 @@ function renderGrammar() {
     });
     render();
   };
-  const next = () => { g.chosen = null; g.idx = (g.idx + 1) % poolLen; render(); };
+  const next = () => {
+    g.chosen = null;
+    g.idx = (g.idx + 1) % poolLen;
+    // Mode infini : recharge en arrière-plan avant d'arriver au bout
+    if (usingAI && g.endless && AI_ENABLED === true && !g.aiLoading && g.idx >= g.aiQueue.length - 2) generateAI(true);
+    render();
+  };
 
   const card = h('div', { class: 'card' },
     h('div', { class: 'display', style: 'font-size:21px;line-height:1.5;margin-bottom:8px' },
@@ -1299,13 +1518,13 @@ function renderGrammar() {
     h('h2', { class: 'section-title' }, h('em', {}, 'Grammar'), ' · Part 5'),
     h('div', { class: 'ribbon', style: 'margin-bottom:14px' },
       h('button', { class: `chip ${g.source === 'builtin' ? 'accent' : ''}`, onclick: () => switchTo('builtin') }, `Banque intégrée (${GRAMMAR_BANK.length})`),
-      g.aiQueue.length > 0 ? h('button', { class: `chip ${g.source === 'ai' ? 'accent' : ''}`, onclick: () => switchTo('ai') }, `Généré par IA (${g.aiQueue.length})`) : null,
+      g.aiQueue.length > 0 ? h('button', { class: `chip ${g.source === 'ai' ? 'accent' : ''}`, onclick: () => switchTo('ai') }, `IA ∞ (${g.aiQueue.length})`) : null,
       AI_ENABLED === true
-        ? h('button', { class: 'chip', style: 'border-color:var(--gold);color:var(--gold)', onclick: generateAI, disabled: g.aiLoading },
-            g.aiLoading ? '⏳ Génération…' : '✦ Générer 8 questions')
+        ? h('button', { class: 'chip', style: 'border-color:var(--gold);color:var(--gold)', onclick: () => generateAI(false), disabled: g.aiLoading },
+            g.aiLoading ? '⏳ Génération…' : (g.aiQueue.length ? '✦ Encore +8' : '✦ Mode infini'))
         : null
     ),
-    h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, `Question ${g.idx + 1}/${poolLen} · Session : ${g.ok}/${g.total}${usingAI ? ' · source IA' : ''}`),
+    h('p', { class: 'quiet-text', style: 'margin-bottom:14px' }, `Question ${g.idx + 1}/${usingAI && g.endless ? '∞' : poolLen} · Session : ${g.ok}/${g.total}${usingAI ? ' · IA' : ''}`),
     card
   );
 }
@@ -1857,9 +2076,9 @@ function finishMock() {
   state.mock.finished = true;
   const m = state.mock; const T = m.test;
   let ok = 0;
-  T.grammar.forEach((q, i) => { if (m.answers['g'+i] === q.a) ok++; });
-  T.reading.questions.forEach((q, i) => { if (m.answers['r'+i] === q.a) ok++; });
-  T.listening.questions.forEach((q, i) => { if (m.answers['l'+i] === q.a) ok++; });
+  T.grammar.forEach((q, i) => { if (m.answers['g'+i] === q.a) ok++; else logMistake({ module: 'grammar', topic: 'Grammaire (examen)', q: q.q, opts: q.opts, a: q.a, expl: q.expl }); });
+  T.reading.questions.forEach((q, i) => { if (m.answers['r'+i] === q.a) ok++; else logMistake({ module: 'reading', topic: 'Reading (examen)', q: q.q, opts: q.opts, a: q.a, expl: '' }); });
+  T.listening.questions.forEach((q, i) => { if (m.answers['l'+i] === q.a) ok++; else logMistake({ module: 'listening', topic: 'Listening (examen)', q: q.q, opts: q.opts, a: q.a, expl: '' }); });
   const total = T.grammar.length + T.reading.questions.length + T.listening.questions.length;
   const score = Math.round((ok / total) * 100);
   updateProgress(p => {
